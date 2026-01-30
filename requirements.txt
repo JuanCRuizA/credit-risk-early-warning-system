@@ -24,6 +24,24 @@ shap>=0.42.0
 openai>=1.0.0
 langchain>=0.1.0
 langchain-openai>=0.0.5
+anthropic>=0.39.0  # Anthropic Python SDK (dependency of claude-agent-sdk)
+claude-agent-sdk>=0.1.0  # Official Claude Agent SDK for autonomous portfolio surveillance
+
+# ----- Database -----
+sqlalchemy>=2.0.0  # ORM for SQLite database operations
+
+# ----- News & Market Intelligence APIs -----
+newsapi-python>=0.2.7  # Financial news search
+finnhub-python>=2.4.0  # Financial data backup
+yfinance>=0.2.0  # Market data
+
+# ----- Agent Utilities -----
+nest-asyncio>=1.6.0  # Enable async event loops in Jupyter notebooks
+tenacity>=8.2.0  # Retry logic with exponential backoff
+pydantic>=2.0.0  # Data validation and settings
+tabulate>=0.9.0  # Table formatting for reports
+rich>=13.0.0  # Rich terminal output
+httpx>=0.25.0  # Async HTTP client
 
 # ----- Web Application -----
 streamlit>=1.28.0

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m jupyter:*)",
+      "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\models\"\")",
+      "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\data\\\\processed\"\")",
+      "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\data\\\\raw\"\")",
+      "Bash(python3:*)"
+    ]
+  }
+}

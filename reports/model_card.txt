@@ -1,0 +1,102 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              MODEL CARD                                       ║
+║                    Credit Risk Early Warning System                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+
+📋 MODEL IDENTIFICATION
+────────────────────────────────────────────────────────────────────────────────
+  Model Name:           XGBoost Credit Risk Model v1.0
+  Model Type:           Gradient Boosted Decision Trees (XGBoost)
+  Version:              1.0
+  Documentation Date:   2026-01-25
+  Model Owner:          Credit Risk Analytics Team
+
+📎 PURPOSE AND INTENDED USE
+────────────────────────────────────────────────────────────────────────────────
+  Primary Use:          Probability of Default (PD) estimation for retail credit
+  Decision Support:     Loan approval/rejection recommendations
+  Target Population:    Retail loan applicants
+  NOT Intended For:     Commercial lending, mortgage underwriting without adaptation
+
+📊 TRAINING DATA DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+  Source:               Home Credit Group loan application data
+  Time Period:          Historical loan performance data
+  Sample Size:          307,511 applications
+  Default Rate:         8.07% (class imbalance addressed via scale_pos_weight)
+  Geographic Scope:     Multi-regional retail lending
+
+  Feature Categories:
+    • Application features (demographics, financials)
+    • External credit bureau scores (EXT_SOURCE_1, 2, 3)
+    • Bureau aggregations (external loan history)
+    • Previous application history (Home Credit)
+    • Engineered ratios (DTI, payment burden, etc.)
+
+📈 PERFORMANCE METRICS
+────────────────────────────────────────────────────────────────────────────────
+  Test Set Size:        61,503 applications (20% holdout)
+
+  Discrimination Metrics:
+    • AUC-ROC:          0.7793
+    • Gini Coefficient: 0.5585
+
+  At Business Threshold (0.59):
+    • Precision:        0.2272
+    • Recall:           0.5531
+
+  Cross-Validation:     5-Fold Stratified CV performed
+  Stability:            Low variance across folds (model is stable)
+
+🎯 THRESHOLDS AND DECISION RULES
+────────────────────────────────────────────────────────────────────────────────
+  Statistical Optimal:  0.5092 (Youden's J)
+  Business Optimal:     0.5900 (Profit maximization)
+  Default Threshold:    0.5000
+
+  Decision Logic:
+    IF P(default) >= 0.59 THEN REJECT (high risk)
+    IF P(default) <  0.59 THEN APPROVE (acceptable risk)
+
+⚠️  KNOWN LIMITATIONS AND FAILURE MODES
+────────────────────────────────────────────────────────────────────────────────
+  1. Population Shift: Model trained on historical data may not reflect
+     current economic conditions. Monitor for concept drift.
+
+  2. External Score Dependency: Model heavily relies on EXT_SOURCE features.
+     Missing external scores may reduce prediction accuracy.
+
+  3. Class Imbalance: Default rate is 8.07%. Model may underperform on
+     extreme edge cases due to limited positive samples.
+
+  4. Feature Availability: Some features may not be available at
+     application time (e.g., previous application history for new customers).
+
+⚖️  FAIRNESS CONSIDERATIONS
+────────────────────────────────────────────────────────────────────────────────
+  Protected Attributes Monitored:
+    • CODE_GENDER: Gender is included as a feature - monitor for disparate impact
+    • AGE_YEARS: Age correlates with default - ensure ECOA compliance
+    • NAME_FAMILY_STATUS: Marital status used - potential fair lending concern
+
+  Recommendations:
+    1. Conduct regular disparate impact analysis
+    2. Monitor approval rates by protected class
+    3. Consider removing or constraining sensitive features
+    4. Implement second-look programs for borderline rejections
+
+📋 SR 11-7 COMPLIANCE NOTES
+────────────────────────────────────────────────────────────────────────────────
+  ✓ Model Development: Documented methodology and feature engineering
+  ✓ Model Validation: Independent test set evaluation completed
+  ✓ Model Explainability: SHAP analysis provides feature-level explanations
+  ✓ Model Monitoring: Recommend quarterly performance review
+  ✓ Model Governance: Version control and change management in place
+
+  Outstanding Items:
+    • Champion/Challenger testing framework to be implemented
+    • Stress testing under adverse economic scenarios pending
+    • Annual model revalidation schedule to be established
+
+════════════════════════════════════════════════════════════════════════════════
