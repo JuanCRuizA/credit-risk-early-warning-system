@@ -1,4 +1,4 @@
-# 🏦 Credit Risk Early Warning System (CREWS)
+# Credit Risk Early Warning System (CREWS)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://credit-risk-early-warning-system.streamlit.app)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -10,15 +10,15 @@ An end-to-end credit risk assessment system that combines machine learning-based
 
 ---
 
-## 🚀 Live Demo
+## Live Demo
 
-**[📊 Launch Interactive Dashboard](https://credit-risk-early-warning-system.streamlit.app)** | [📓 View Notebooks](notebooks/) | [🤖 AI Agent Report](notebooks/05_portfolio_surveillance.ipynb)
+**[Launch Interactive Dashboard](https://credit-risk-early-warning-system.streamlit.app)** | [View Notebooks](notebooks/) | [AI Agent Report](notebooks/05_portfolio_surveillance.ipynb)
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
-This project demonstrates a complete Banking Data Science workflow, from data exploration to production deployment. The system:
+This project demonstrates a complete Banking Data Science workflow, from data exploration to production deployment. It is an End-to-end credit risk modeling system with AI-powered portfolio surveillance for proactive default prediction in consumer lending. The system:
 
 1. **Predicts credit default probability** using gradient boosting models (XGBoost)
 2. **Explains predictions** using SHAP values for regulatory compliance
@@ -28,50 +28,57 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- 🤖 **Autonomous AI Agent** for portfolio surveillance powered by Claude Sonnet 4 API
-- 📊 **Interactive Streamlit Dashboard** with real-time risk assessment
-- 🎯 **200+ Engineered Features** with XGBoost gradient boosting
-- 🔍 **SHAP Explainability** for regulatory compliance and audit trail
-- 💰 **Business Profit Optimization** using cost-sensitive evaluation
-- 📈 **Portfolio Analytics** with vintage analysis and distribution drift detection
-- 🏦 **Banking Compliance** aligned with Basel III/IV, SR 11-7, and IFRS 9
+- **Autonomous AI Agent** for portfolio surveillance powered by Claude Sonnet 4 API
+- **Interactive Streamlit Dashboard** with real-time risk assessment
+- **200+ Engineered Features** with XGBoost gradient boosting
+- **SHAP Explainability** for regulatory compliance and audit trail
+- **Business Profit Optimization** using cost-sensitive evaluation
+- **Portfolio Analytics** with vintage analysis and distribution drift detection
+- **Banking Compliance** aligned with Basel III/IV, SR 11-7, and IFRS 9
 
 ---
 
-## 📸 Project Showcase
+## Project Showcase
 
-### 🤖 AI Agent Portfolio Surveillance
+### AI Agent Portfolio Surveillance
 ![AI Agent Analysis](docs/screenshots/ai_agent_overview.png)
 *Autonomous agent performing hierarchical portfolio health check with 4-phase analysis protocol*
 
-### 📊 Interactive Dashboard
+### Interactive Dashboard
 ![Dashboard Overview](docs/screenshots/dashboard_overview.png)
 *Real-time portfolio monitoring with risk distribution and vintage analysis*
 
 ---
 
-## 🎯 Business Impact
+## Business Impact
 
 The AI surveillance agent identified **critical portfolio risks** requiring immediate action:
 
 | Metric | Finding | Impact |
 |--------|---------|--------|
-| **High-Risk Loans** | 181,678 borrowers (59.1% of portfolio) | $2.1B credit loss exposure |
+| **High-Risk Loans** | 42,073 borrowers (13.68% of portfolio) |
 | **Distribution Drift** | EXT_SOURCE_3, DAYS_BIRTH, AMT_CREDIT | Model recalibration required |
 | **Vintage Performance** | 63.8% default rate in mature loans (18+ months) | Underwriting quality decline |
 | **Recommendations** | 4 strategic actions generated | Regulatory compliance maintained |
 
+## Key Results
+- **Portfolio Size**: 307,511 loans
+- **High Risk Loans Identified**: 42,073 (13.68%)
+- **Average Default Probability**: 8.07% (baseline rate)
+- **Model Performance**: AUC 0.76, Gini 0.518
+
+
 ### Strategic Recommendations Generated:
-1. 🔧 **Urgent model recalibration** (4-week timeline) - Model operating outside calibration zone
-2. ⏸️ **Temporary origination suspension** - Risk profile exceeds acceptable thresholds
-3. 📞 **Intensive collection strategy** for 181K high-risk borrowers
-4. 🔍 **Underwriting audit** for post-2022 loan vintages
+1. **Urgent model recalibration** (4-week timeline) - Model operating outside calibration zone
+2. **Temporary origination suspension** - Risk profile exceeds acceptable thresholds
+3. **Intensive collection strategy** for 42K high-risk borrowers
+4. **Underwriting audit** for post-2022 loan vintages
 
 ---
 
-## 🗃️ Architecture
+## Architecture
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                     DATA LAYER                               │
@@ -99,7 +106,7 @@ The AI surveillance agent identified **critical portfolio risks** requiring imme
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 This project uses the [Home Credit Default Risk](https://www.kaggle.com/c/home-credit-default-risk) dataset from Kaggle, containing:
 
@@ -110,7 +117,7 @@ This project uses the [Home Credit Default Risk](https://www.kaggle.com/c/home-c
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 ```
 credit-risk-early-warning-system/
 ├── notebooks/
@@ -132,50 +139,49 @@ credit-risk-early-warning-system/
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technologies |
 |----------|-------------|
 | **Data Processing** | Pandas, NumPy |
-| **Machine Learning** | Scikit-learn, XGBoost |
-| **Explainability** | SHAP (SHapley Additive exPlanations) |
-| **AI Agent** | Anthropic Claude Sonnet 4 API |
+| **Machine Learning** | Scikit-learn, XGBoost with 200+ engineered features|
+| **Explainability** | SHAP (SHapley Additive exPlanations) values for interpretability |
+| **AI Agent** | Anthropic Claude Sonnet 4 API for autonomous surveillance |
 | **Visualization** | Matplotlib, Seaborn, Plotly |
-| **Web Application** | Streamlit |
+| **Web Application** | Streamlit dashboard + SQLite database |
 | **Deployment** | Streamlit Cloud |
 | **Version Control** | Git, GitHub |
 
 ---
 
-## 📈 Model Performance
+## Model Performance
 
 | Metric | Value | Description |
 |--------|-------|-------------|
-| **ROC-AUC** | 0.759 | Area Under ROC Curve |
+| **ROC-AUC** | 0.76 | Area Under ROC Curve |
 | **Gini Coefficient** | 0.518 | Model discriminatory power |
 | **KS Statistic** | 0.421 | Kolmogorov-Smirnov test |
 | **Brier Score** | 0.156 | Probability calibration |
 
 ### Key Technical Achievements:
-- ✅ **200+ engineered features** including aggregations, ratios, and interactions
-- ✅ **Class imbalance handling** via scale_pos_weight parameter
-- ✅ **Cost-sensitive evaluation** with business profit optimization
-- ✅ **SHAP explainability** for every prediction (regulatory requirement)
-- ✅ **Autonomous monitoring** via AI agent with hierarchical analysis protocol
+- **200+ engineered features** including aggregations, ratios, and interactions
+- **Class imbalance handling** via scale_pos_weight parameter
+- **Cost-sensitive evaluation** with business profit optimization
+- **SHAP explainability** for every prediction (regulatory requirement)
+- **Autonomous monitoring** via AI agent with hierarchical analysis protocol
 
 ---
 
-## 🤖 AI Agent Capabilities
+## AI Agent Capabilities
 
 The autonomous portfolio surveillance agent:
-
-- ✅ **Analyzes portfolio-level risk metrics** across 307K+ loans
-- ✅ **Identifies high-risk customer segments** (PD > 0.59 threshold)
-- ✅ **Detects distribution drift** in critical credit features
-- ✅ **Performs vintage analysis** to identify performance trends
-- ✅ **Generates natural language risk reports** with strategic recommendations
-- ✅ **Triggers alerts** when risk thresholds are breached
-- ✅ **Maintains audit trail** for regulatory compliance
+- **Analyzes portfolio-level risk metrics** across 307K+ loans
+- **Identifies high-risk customer segments** (PD > 0.59 threshold)
+- **Detects distribution drift** in critical credit features
+- **Performs vintage analysis** to identify performance trends
+- **Generates natural language risk reports** with strategic recommendations
+- **Triggers alerts** when risk thresholds are breached
+- **Maintains audit trail** for regulatory compliance
 
 ### Agent Architecture:
 - **SDK:** Anthropic Claude Sonnet 4
@@ -185,7 +191,7 @@ The autonomous portfolio surveillance agent:
 
 ---
 
-## 🏦 Banking & Regulatory Compliance
+## Banking & Regulatory Compliance
 
 This system is designed to align with international banking standards:
 
@@ -209,7 +215,7 @@ Where:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -257,7 +263,7 @@ jupyter lab
 
 ---
 
-## 🎓 Educational Value
+## Educational Value
 
 This project demonstrates:
 
@@ -270,15 +276,15 @@ This project demonstrates:
 
 ---
 
-## 📧 Contact & Connect
+## Contact & Connect
 
 **Juan Carlos Ruiz Arteaga** - MSc Data Science & AI, University of Liverpool
 
-🔗 **[LinkedIn](http://www.linkedin.com/in/%20juancarlosruizarteagasep72)** | 📧 **[Email](mailto:carlosarte11@gmail.com)** | 💼 **[Portfolio](https://github.com/JuanCRuizA)**
+**[LinkedIn](http://www.linkedin.com/in/%20juancarlosruizarteagasep72)** | **[Email](mailto:carlosarte11@gmail.com)** | **[Portfolio](https://github.com/JuanCRuizA)**
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Dataset:** [Home Credit Default Risk](https://www.kaggle.com/c/home-credit-default-risk) - Kaggle Competition
 - **AI Agent:** Powered by Anthropic Claude Sonnet 4
@@ -287,18 +293,18 @@ This project demonstrates:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**⭐ If you find this project useful for your learning or career, please consider giving it a star!**
+**If you find this project useful for your learning or career, please consider giving it a star!**
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for the Banking, Financial Services, and Insurance (BFSI) sector</sub>
+  <sub>Built with love for the Banking, Financial Services, and Insurance (BFSI) sector</sub>
   <br>
   <sub><em>GOD first, this project was built as part of my journey to become a Banking Data Scientist, combining technical skills with a commitment to ethical AI and financial inclusion.</em></sub>
 </div>

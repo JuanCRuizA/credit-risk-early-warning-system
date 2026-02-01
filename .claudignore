@@ -1,0 +1,19 @@
+# Dependencias (Esto es lo que más consume tokens)
+node_modules/
+env/
+venv/
+.env
+
+# Carpetas de compilación y caché
+dist/
+build/
+.cache/
+.next/
+
+# Archivos de sistema y logs
+.DS_Store
+*.log
+npm-debug.log*
+
+# Git
+.git/
