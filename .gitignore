@@ -109,4 +109,5 @@ reports/*.pdf
 !models/feature_names.pkl
 !models/label_encoders_v2.pkl
 !models/categorical_modes.pkl
-!models/population_medians.csv
+!models/population_medians.csv  
+!models/xgb_credit_model.pkl 
