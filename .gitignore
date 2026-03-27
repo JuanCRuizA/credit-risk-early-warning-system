@@ -80,7 +80,6 @@ ehthumbs.db
 Desktop.ini
 
 # ----- MODEL FILES (Large files) -----
-models/
 *.pkl
 *.joblib
 *.h5
@@ -102,3 +101,12 @@ reports/*.pdf
 
 # ----- STREAMLIT -----
 .streamlit/secrets.toml
+
+# ----- DASHBOARD ARTIFACTS (small files needed for Streamlit Cloud) -----
+!test_dashboard.csv
+!models/xgb_credit_model.pkl
+!models/thresholds.pkl
+!models/feature_names.pkl
+!models/label_encoders_v2.pkl
+!models/categorical_modes.pkl
+!models/population_medians.csv

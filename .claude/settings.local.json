@@ -5,7 +5,14 @@
       "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\models\"\")",
       "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\data\\\\processed\"\")",
       "Bash(dir /b \"c:\\\\Users\\\\carlo\\\\Documents\\\\4.DS\\\\credit-risk-early-warning-system\\\\data\\\\raw\"\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Read(//c/Users/carlo/Documents/**)",
+      "Bash(1:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c \":*)"
     ]
   }
 }
