@@ -193,10 +193,10 @@
 
 ## 04_model_explainability.ipynb
 
-**Date:** 2026-01-25
-**Status:** Completed (44 cells)
+**Date:** 2026-01-25 (updated 2026-03-28)
+**Status:** Completed (51 cells)
 **Location:** `notebooks/04_model_explainability.ipynb`
-**Objective:** Explain XGBoost predictions using SHAP analysis for model interpretability, regulatory compliance, and business insights.
+**Objective:** Explain XGBoost predictions using SHAP and LIME dual-method analysis for model interpretability, regulatory compliance, and business insights.
 
 ### Notebook Structure
 
@@ -206,6 +206,7 @@
 | 2. Global Explainability | SHAP TreeExplainer on 10,000-sample subset |
 | 2.5 Business Interpretation | Plain-English insights for top features |
 | 3. Local Explainability | Waterfall plots for 3 case studies (FN, FP, TP) |
+| 3.5 LIME Explainability | LIME local explanations for 3 case studies + SHAP vs LIME comparison |
 | 4. Dependence Plots | Top 5 features: value vs SHAP contribution |
 | 5. Interaction Effects | SHAP interaction values for 1,000 samples |
 | 6. Risk Segment Analysis | Feature importance by risk decile |
@@ -231,7 +232,7 @@
 | False Positive | Over-rejection | Legitimate borrower flagged due to feature combination |
 | True Positive | Correct rejection | Multiple strong risk indicators aligned |
 
-### Visualizations (12 total, saved to `reports/SHAP Explainability/`)
+### Visualizations (16 total, saved to `reports/`)
 1. `shap_summary_beeswarm.png` - Global SHAP beeswarm plot
 2. `shap_global_importance.png` - Feature importance bar chart
 3. `shap_waterfall_false_negative.png` - Local explanation (missed default)
@@ -244,12 +245,20 @@
 10. `shap_dependence_employment.png` - Employment duration vs SHAP
 11. `shap_interaction_ext_employment.png` - Feature interaction plot
 12. `shap_importance_by_segment.png` - Importance by risk decile
+13. `lime_false_negative.png` - LIME local explanation (missed default)
+14. `lime_false_positive.png` - LIME local explanation (over-rejection)
+15. `lime_true_positive.png` - LIME local explanation (correct rejection)
+16. `shap_vs_lime_comparison.png` - Side-by-side SHAP vs LIME feature attribution
 
 ### Key Outputs
 - `reports/executive_summary.txt` - Top 5 business insights + recommendations
 - `reports/model_card.txt` - Full model documentation (SR 11-7 compliant)
 - `reports/shap_feature_importance.csv` - SHAP importance values
 - `models/shap_explainer_info.pkl` - SHAP explainer configuration
+- `reports/lime_false_negative.png` - LIME local explanation
+- `reports/lime_false_positive.png` - LIME local explanation
+- `reports/lime_true_positive.png` - LIME local explanation
+- `reports/shap_vs_lime_comparison.png` - Method comparison chart
 
 ### Key Findings
 - **External credit scores dominate** prediction explanations (SHAP importance 0.39)
@@ -257,6 +266,7 @@
 - **Feature interactions** vary across risk segments (different drivers for high vs low risk)
 - **Fairness concern**: CODE_GENDER and AGE_YEARS are protected attributes with significant SHAP impact
 - **Model limitations**: False negatives show normal feature values across all dimensions
+- **LIME validates SHAP**: Dual-method explainability confirms top feature attributions are robust across methodologies
 
 ---
 
@@ -344,8 +354,8 @@
 
 ## Streamlit Dashboard (app.py)
 
-**Date:** 2026-01-31
-**Status:** Completed (296 lines)
+**Date:** 2026-01-31 (updated 2026-03-28)
+**Status:** Completed (~1300 lines)
 **Location:** `app.py` (project root)
 **Objective:** Interactive web dashboard for portfolio visualization, AI agent insights, and model performance metrics.
 
@@ -356,6 +366,8 @@
 | Portfolio Overview | 4 KPI cards (Total Loans, High Risk, Default Rate, Model Status); Risk distribution bar chart; Vintage analysis line chart |
 | AI Agent Insights | Last analysis info; AI agent screenshot; 4-phase findings; Regulatory compliance cards (SR 11-7, Basel III/IV, IFRS 9) |
 | Model Performance | 4 metric cards (AUC, Gini, KS, Brier); Model architecture details; Feature engineering summary; Business value; Tech stack |
+| IFRS 9 ECL Analysis | ECL calculations, staging distribution, forward-looking scenarios |
+| Regulatory Compliance | SR 11-7, Fair Lending, Model Governance, IFRS 9 ECL, Right-to-Explanation, Basel III/IV, EU AI Act (2024), FINMA Circular 2017/1, Swiss nDSG |
 
 ### Sidebar Features
 - Individual Loan Risk Calculator with 4 inputs

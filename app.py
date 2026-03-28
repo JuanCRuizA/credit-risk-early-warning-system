@@ -295,8 +295,8 @@ with st.sidebar:
             "- **Dataset:** Home Credit Default Risk (307,511 loans)\n"
             "- **Model:** XGBoost with 211 engineered features\n"
             f"- **Cost structure:** ${FN_COST:,.0f} FN / ${FP_COST:.0f} FP\n"
-            "- **Explainability:** SHAP TreeExplainer\n"
-            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA/Fair Lending"
+            "- **Explainability:** SHAP TreeExplainer + LIME\n"
+            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA, EU AI Act, FINMA, nDSG"
         )
 
 
@@ -929,7 +929,10 @@ with tab5:
 &nbsp;&nbsp;3. <a href="#model-governance">Model Governance Framework</a><br>
 &nbsp;&nbsp;4. <a href="#ifrs-9-methodology">IFRS 9 ECL Methodology</a><br>
 &nbsp;&nbsp;5. <a href="#right-to-explanation">Right-to-Explanation Capabilities</a><br>
-&nbsp;&nbsp;6. <a href="#basel-alignment">Basel III/IV Alignment</a>
+&nbsp;&nbsp;6. <a href="#basel-alignment">Basel III/IV Alignment</a><br>
+&nbsp;&nbsp;7. <a href="#eu-ai-act">EU AI Act (2024) Compliance</a><br>
+&nbsp;&nbsp;8. <a href="#finma-circular">FINMA Circular 2017/1 (Switzerland)</a><br>
+&nbsp;&nbsp;9. <a href="#swiss-ndsg">Swiss nDSG Data Protection</a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1146,6 +1149,141 @@ Under the Basel IRB approach, risk weights are derived from PD, LGD, and EAD:
 - CREWS PD estimates can serve as PIT (Point-in-Time) inputs to IRB calculations
 - For TTC (Through-the-Cycle) PD required by some jurisdictions, apply long-run average adjustment
 - Model performance (AUC 0.779, Gini 0.559) meets minimum discrimination requirements for IRB approval
+""")
+
+    st.markdown("[Back to top](#compliance-top)")
+    st.markdown("---")
+
+    # Section 7: EU AI Act (2024)
+    st.subheader("7. EU AI Act (2024) Compliance", anchor="eu-ai-act")
+
+    st.markdown("""
+**Classification:** CREWS is a **high-risk AI system** under the EU AI Act.
+
+**Legal Basis:** Regulation (EU) 2024/1689, Annex III, Section 5(b):
+> *"AI systems intended to be used to evaluate the creditworthiness of natural persons
+> or establish their credit score"* are classified as high-risk.
+
+This classification triggers mandatory requirements under Title III, Chapter 2 (Articles 8-15).
+""")
+
+    eu_ai_data = pd.DataFrame([
+        {'Requirement': 'Art. 9 -- Risk Management System',
+         'Status': 'PARTIAL',
+         'CREWS Implementation': 'SHAP+LIME dual explainability, business threshold optimization, stress testing in Notebook 05. Residual risk: model drift monitoring is designed but not yet automated in production.'},
+        {'Requirement': 'Art. 10 -- Data Governance',
+         'Status': 'COMPLIANT',
+         'CREWS Implementation': 'Home Credit dataset with documented provenance. EDA (Notebook 01) covers data quality, missing value strategy, outlier analysis. Feature engineering documented in Notebook 02.'},
+        {'Requirement': 'Art. 11 -- Technical Documentation',
+         'Status': 'COMPLIANT',
+         'CREWS Implementation': 'Model card (reports/model_card.txt), technical decisions log, 5 notebooks with full methodology. SHAP feature importance archived.'},
+        {'Requirement': 'Art. 12 -- Record-Keeping',
+         'Status': 'COMPLIANT',
+         'CREWS Implementation': 'Audit trail logging (audit_trail.log) with session IDs, timestamps, and action summaries. SHAP values stored per decision.'},
+        {'Requirement': 'Art. 13 -- Transparency',
+         'Status': 'COMPLIANT',
+         'CREWS Implementation': 'SHAP waterfall plots for individual decisions. LIME provides independent model-agnostic validation. Adverse action notice generation capability.'},
+        {'Requirement': 'Art. 14 -- Human Oversight',
+         'Status': 'PARTIAL',
+         'CREWS Implementation': 'Dashboard enables human review of flagged loans. Business threshold allows manual override. Full automation not implemented (human-in-the-loop by design).'},
+        {'Requirement': 'Art. 15 -- Accuracy & Robustness',
+         'Status': 'COMPLIANT',
+         'CREWS Implementation': 'AUC 0.7793, 5-fold CV stability (std 0.0037), calibration curve analysis, stress testing under 3 macroeconomic scenarios.'},
+    ])
+    st.table(eu_ai_data)
+
+    st.markdown(
+        "**Timeline:** EU AI Act entered into force August 2024. High-risk AI system "
+        "requirements apply from August 2026 (24-month transition). CREWS documentation "
+        "is designed to meet these requirements proactively."
+    )
+
+    st.markdown("[Back to top](#compliance-top)")
+    st.markdown("---")
+
+    # Section 8: FINMA Circular 2017/1
+    st.subheader("8. FINMA Circular 2017/1 -- Model Risk Management (Switzerland)", anchor="finma-circular")
+
+    st.markdown("""
+**Applicability:** FINMA (Swiss Financial Market Supervisory Authority) Circular 2017/1
+"Corporate Governance -- Banks" establishes model risk management requirements for
+banks operating in Switzerland. While CREWS is a portfolio project, its design aligns
+with FINMA expectations for credit risk models used in supervised institutions.
+
+**Key FINMA Requirements and CREWS Alignment:**
+""")
+
+    finma_data = pd.DataFrame([
+        {'FINMA Requirement': 'Model Inventory & Classification',
+         'Principle': 'All models must be inventoried with risk tier classification',
+         'CREWS Status': 'Model Governance section (Section 3) classifies CREWS as Tier 2 (Material). Model identification includes name, version, type, purpose, and date.'},
+        {'FINMA Requirement': 'Independent Model Validation',
+         'Principle': 'Models must be validated by a function independent from development',
+         'CREWS Status': 'Pending -- listed in Production Readiness Checklist. 5-fold cross-validation and holdout test set provide quantitative validation. Second-line review recommended.'},
+        {'FINMA Requirement': 'Model Documentation',
+         'Principle': 'Complete documentation of methodology, assumptions, and limitations',
+         'CREWS Status': 'Compliant -- model card, technical decisions log (13 decisions), 5 documented notebooks, SHAP analysis with business interpretation.'},
+        {'FINMA Requirement': 'Ongoing Monitoring',
+         'Principle': 'Regular performance monitoring and backtesting',
+         'CREWS Status': 'Monitoring schedule defined (daily/weekly/monthly/quarterly/annual). PSI drift detection designed in AI agent. Automated revalidation pending.'},
+        {'FINMA Requirement': 'Stress Testing',
+         'Principle': 'Models must be stress tested under adverse scenarios',
+         'CREWS Status': 'Compliant -- 3 stress scenarios implemented in Notebook 05 (interest rate shock, income reduction, employment stress). Results: +1.14% combined PD increase.'},
+        {'FINMA Requirement': 'Board & Senior Management Reporting',
+         'Principle': 'Regular model risk reporting to governance bodies',
+         'CREWS Status': 'Executive summary and AI agent reports designed for senior management consumption. Dashboard provides real-time portfolio view.'},
+    ])
+    st.table(finma_data)
+
+    st.markdown(
+        "**Note:** FINMA Circular 2017/1 is supplemented by FINMA Guidance 03/2024 on "
+        "artificial intelligence, which extends model risk management requirements to "
+        "AI/ML models specifically. CREWS's dual explainability approach (SHAP + LIME) "
+        "aligns with FINMA's emphasis on model interpretability for AI systems."
+    )
+
+    st.markdown("[Back to top](#compliance-top)")
+    st.markdown("---")
+
+    # Section 9: Swiss nDSG (Data Protection)
+    st.subheader("9. Swiss nDSG -- Federal Act on Data Protection", anchor="swiss-ndsg")
+
+    st.markdown("""
+**Effective Date:** September 1, 2023 (revised Swiss Federal Act on Data Protection, nDSG/nFADP)
+
+The nDSG modernizes Swiss data protection to align with GDPR standards while maintaining
+Swiss-specific provisions. Credit scoring models processing personal data of Swiss residents
+must comply with the following requirements:
+""")
+
+    ndsg_data = pd.DataFrame([
+        {'nDSG Provision': 'Art. 21 -- Automated Individual Decisions',
+         'Requirement': 'Data subjects have the right to be informed when a decision is based solely on automated processing that significantly affects them, and to request human review',
+         'CREWS Alignment': 'SHAP waterfall plots provide per-decision explanations. Business threshold allows human override. Right-to-Explanation capability (Section 5) generates adverse action notices.'},
+        {'nDSG Provision': 'Art. 25-27 -- Right to Information',
+         'Requirement': 'Data subjects can request information about what personal data is processed, for what purpose, and the logic behind automated decisions',
+         'CREWS Alignment': 'Model card documents all input features, purpose, and methodology. SHAP + LIME provide dual-method logic explanations. Feature names mapped to plain-English labels.'},
+        {'nDSG Provision': 'Art. 22 -- Data Protection Impact Assessment (DPIA)',
+         'Requirement': 'Required when processing poses a high risk to personality or fundamental rights. Credit scoring is explicitly high-risk.',
+         'CREWS Alignment': 'Fair lending analysis (Section 2) identifies protected attributes. CODE_GENDER flagged as HIGH risk. DPIA documentation recommended before production deployment.'},
+        {'nDSG Provision': 'Art. 6 -- Profiling',
+         'Requirement': 'High-risk profiling (automated assessment of creditworthiness) requires explicit consent or legal basis. Must be transparent and proportionate.',
+         'CREWS Alignment': 'CREWS performs high-risk profiling (credit scoring). Requires explicit consent or contractual necessity as legal basis. Feature selection documented with proportionality rationale.'},
+        {'nDSG Provision': 'Art. 8 -- Data Security',
+         'Requirement': 'Appropriate technical and organizational measures to protect personal data',
+         'CREWS Alignment': 'Model artifacts stored locally. API keys in .env (not committed). .gitignore excludes sensitive files. Production deployment would require encryption at rest and in transit.'},
+    ])
+    st.table(ndsg_data)
+
+    st.markdown("""
+**Key Distinction from GDPR:**
+- The nDSG applies to natural persons only (GDPR also covers some legal persons)
+- The nDSG uses a **risk-based approach** similar to GDPR but with Swiss enforcement (FDPIC)
+- Cross-border data transfer requires adequate protection level (Switzerland recognized by EU, but reverse adequacy requires assessment per Art. 16 nDSG)
+- Penalties: up to CHF 250,000 for individuals (not organizations, unlike GDPR's percentage-of-revenue fines)
+
+**Recommendation:** Before deploying CREWS in a Swiss banking context, conduct a formal DPIA
+per Art. 22 nDSG and obtain legal review of the processing legal basis under Art. 6.
 """)
 
     st.markdown("[Back to top](#compliance-top)")

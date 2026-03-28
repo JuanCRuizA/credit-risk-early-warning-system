@@ -16,7 +16,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-006] Stratified Train/Test Split Over Temporal Split
 - [DECISION-007] scale_pos_weight for Class Imbalance Handling
 - [DECISION-008] Dual Threshold Strategy (Statistical + Business)
-- [DECISION-009] SHAP TreeExplainer for Model Explainability
+- [DECISION-009] SHAP TreeExplainer + LIME for Dual Model Explainability
 - [DECISION-010] Autonomous AI Agent with Claude Sonnet 4
 - [DECISION-011] SQLite for Portfolio Surveillance Database
 - [DECISION-012] Streamlit with Plotly for Dashboard Deployment
@@ -242,11 +242,11 @@ Document key technical decisions, rationale, and alternatives considered during 
 
 ---
 
-### [DECISION-009] SHAP TreeExplainer for Model Explainability
-**Date:** 2026-01-25
+### [DECISION-009] SHAP TreeExplainer + LIME for Dual Model Explainability
+**Date:** 2026-01-25 (updated 2026-03-28)
 **Status:** Implemented
 **Context:** Banking regulators (SR 11-7), customers, and analysts need to understand why the model approves or rejects each loan. A "black box" model is not deployable in regulated financial services.
-**Decision:** Use SHAP TreeExplainer to produce exact Shapley values for global and local model explanations.
+**Decision:** Use SHAP TreeExplainer as the primary explainability method (exact Shapley values) complemented by LIME (model-agnostic local linear approximations) for independent validation of feature attributions.
 **Rationale:**
 - **Exact values**: TreeExplainer computes exact (not approximate) Shapley values for tree-based models
 - **Speed**: Polynomial-time algorithm handles 10,000 samples in seconds with 211 features
@@ -255,8 +255,12 @@ Document key technical decisions, rationale, and alternatives considered during 
 - **Dual-purpose**: Global plots (beeswarm, bar) for stakeholders; local plots (waterfall) for analysts and auditors
 - **Dependence plots**: Reveal non-linear relationships and feature interactions
 - **Segment analysis**: Feature importance varies by risk decile -- actionable for portfolio management
+- **LIME complements SHAP**: Provides independent, model-agnostic validation using perturbation-based local linear models
+- **Agreement strengthens confidence**: When SHAP and LIME agree on top features, explanations are robust to methodology choice
+- **Disagreement is informative**: Highlights cases where linear approximation breaks down, flagging complex feature interactions
+- **Dual-method differentiator**: Exceeds single-method requirements (EU AI Act Art. 13, FINMA Guidance 03/2024)
 **Alternatives Considered:**
-- LIME (Local Interpretable Model-agnostic Explanations): Approximation-based, less reliable for trees
+- LIME alone (without SHAP): Approximation-based, less precise for trees; now used as complementary method rather than replacement
 - XGBoost built-in `feature_importances_`: Only global importance (gain/weight), no local explanations
 - Partial Dependence Plots alone: Show marginal effects but don't explain individual decisions
 - Permutation importance: Computationally expensive, no local explanations
@@ -266,6 +270,10 @@ Document key technical decisions, rationale, and alternatives considered during 
 - Model card with SR 11-7 compliance documentation produced
 - Fair lending concern identified: CODE_GENDER has significant SHAP contribution
 - SHAP analysis reveals EXT_SOURCE_MEAN dominates predictions (SHAP importance 0.39)
+- 4 additional LIME visualizations saved to `reports/` (3 case studies + comparison chart)
+- LIME explainer requires `lime>=0.2.0` package (added to requirements.txt)
+- Dual-method approach adds ~30 seconds to notebook runtime for 3 LIME explanations
+- CREWS now uses: XGBoost + SHAP + LIME (vs SAFE project: LightGBM + SHAP only)
 **Related:** `notebooks/04_model_explainability.ipynb`, `reports/model_card.txt`, `reports/executive_summary.txt`
 
 ---

@@ -12,7 +12,8 @@
       "Bash(git restore:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(PYTHONIOENCODING=utf-8 python -c \":*)"
+      "Bash(PYTHONIOENCODING=utf-8 python -c \":*)",
+      "Bash(python -c \":*)"
     ]
   }
 }

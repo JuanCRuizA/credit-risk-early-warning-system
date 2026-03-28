@@ -155,3 +155,14 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 **Prevention:** Use a standard EDA checklist covering: target analysis, missing values (pattern + strategy), correlations, outliers, and categorical analysis.
 
 ---
+
+### [ISSUE-011] LIME Feature Name Extraction from Rule Strings
+**Date:** 2026-03-28
+**Status:** Resolved
+**Severity:** Low
+**Problem:** LIME's `as_list()` method returns feature rules as strings (e.g., "0.32 < EXT_SOURCE_MEAN <= 0.55") rather than clean feature names. This makes direct comparison with SHAP feature names non-trivial.
+**Root Cause:** LIME discretizes continuous features and generates rule-based explanations. The output format includes threshold values embedded in the feature name string.
+**Solution:** Implemented string matching against `X_sample.columns` to extract the original feature name from each LIME rule string. This handles all feature name formats in the dataset.
+**Prevention:** When using LIME for comparison with other methods, always implement a feature name extraction step. Consider using `lime_exp.as_map()` as an alternative that returns feature indices instead of rule strings.
+
+---

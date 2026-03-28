@@ -19,6 +19,7 @@ lightgbm>=4.0.0
 
 # ----- Model Explainability -----
 shap>=0.42.0
+lime>=0.2.0
 
 # ----- AI and Agents -----
 openai>=1.0.0

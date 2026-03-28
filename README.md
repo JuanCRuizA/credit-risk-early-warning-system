@@ -21,7 +21,7 @@ An end-to-end credit risk assessment system that combines machine learning-based
 This project demonstrates a complete Banking Data Science workflow, from data exploration to production deployment. It is an End-to-end credit risk modeling system with AI-powered portfolio surveillance for proactive default prediction in consumer lending. The system:
 
 1. **Predicts credit default probability** using gradient boosting models (XGBoost)
-2. **Explains predictions** using SHAP values for regulatory compliance
+2. **Explains predictions** using SHAP + LIME dual explainability for regulatory compliance
 3. **Monitors portfolio risk** through an autonomous AI agent (Claude Sonnet 4)
 4. **Generates actionable alerts** when risk thresholds are breached
 5. **Visualizes insights** through an interactive Streamlit dashboard
@@ -33,10 +33,10 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 - **Autonomous AI Agent** for portfolio surveillance powered by Claude Sonnet 4 API
 - **Interactive Streamlit Dashboard** with real-time risk assessment
 - **200+ Engineered Features** with XGBoost gradient boosting
-- **SHAP Explainability** for regulatory compliance and audit trail
+- **Dual Explainability (SHAP + LIME)** for regulatory compliance and audit trail
 - **Business Profit Optimization** using cost-sensitive evaluation
 - **Portfolio Analytics** with vintage analysis and distribution drift detection
-- **Banking Compliance** aligned with Basel III/IV, SR 11-7, and IFRS 9
+- **Banking Compliance** aligned with Basel III/IV, SR 11-7, IFRS 9, EU AI Act, FINMA, and Swiss nDSG
 
 ---
 
