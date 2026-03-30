@@ -64,8 +64,8 @@
 
 ## 02_FeatureEng.ipynb
 
-**Date:** 2026-01-25
-**Status:** Completed (36 cells)
+**Date:** 2026-01-25 (updated 2026-03-29)
+**Status:** Completed (38 cells)
 **Location:** `notebooks/02_FeatureEng.ipynb`
 **Objective:** Transform raw data into 200+ engineered features integrating application, bureau, and previous application data.
 
@@ -74,19 +74,22 @@
 | Section | Content |
 |---------|---------|
 | 1. Setup and Data Loading | Load application_train.csv (307,511 x 122) |
-| 2. Application Features | 20 engineered features (ratios, time-based, external scores, documents) |
+| 2. Application Features | 23 engineered features (ratios, time-based, external scores, interactions, documents) |
 | 3. Bureau Features | 41 features from credit bureau (loan counts, credit types, ratios) |
+| Note: Unused Data Sources | Acknowledgment of installments_payments, POS_CASH_balance, credit_card_balance (excluded by scope) |
 | 4. Previous Application Features | 30 features from previous applications (status, contracts, ratios) |
 | 5. Merge All Features | Left joins: application + bureau + previous applications |
+| 5.2b History Flags | HAS_BUREAU_HISTORY, HAS_PREV_APPLICATION binary flags |
 | 6. Feature Selection | Final dataset preparation, missing value handling |
 | 7. Summary | Feature count, save to CSV |
 
-### Features Engineered (91 new features)
+### Features Engineered (96 new features)
 
-**From Application Train (20 features):**
+**From Application Train (23 features):**
 - Ratio Features (6): DEBT_TO_INCOME, PAYMENT_BURDEN, CREDIT_TO_GOODS, ANNUITY_TO_CREDIT, INCOME_PER_PERSON, INCOME_TO_CREDIT
 - Time-Based Features (6): AGE_YEARS, EMPLOYMENT_YEARS, FLAG_UNEMPLOYED, REGISTRATION_YEARS, ID_PUBLISH_YEARS, EMPLOYMENT_TO_AGE
 - External Source Features (6): EXT_SOURCE_MEAN, EXT_SOURCE_WEIGHTED, EXT_SOURCE_PRODUCT, EXT_SOURCE_MIN, EXT_SOURCE_MAX, EXT_SOURCE_MISSING_COUNT
+- Interaction Features (3): EXT_SCORE_x_PAYMENT_BURDEN, EXT_SCORE_x_AGE, EXT_SCORE_x_DEBT_RATIO
 - Document Features (2): DOCUMENTS_PROVIDED_COUNT, DOCUMENTS_PROVIDED_RATIO
 
 **From Bureau Data (41 features):**
@@ -100,17 +103,24 @@
 - Contract Type Features (4): By type (cash, consumer, revolving)
 - Derived Features (2): Credit-to-application ratio, average credit per app
 
+**History Flags (2 features):**
+- HAS_BUREAU_HISTORY: Distinguishes "no bureau records" from "bureau records with zero values"
+- HAS_PREV_APPLICATION: Distinguishes "no previous applications" from "previous applications with zero values"
+
 ### Key Outputs
-- `data/processed/features_train.csv` - 307,511 rows x 213 columns (363.2 MB)
-- `data/processed/feature_names.csv` - List of 211 feature names
+- `data/processed/features_train.csv` - 307,511 rows x 218 columns
+- `data/processed/feature_names.csv` - List of 216 feature names
 - `reports/feature_correlations.png` - Top 20 features correlated with target
 
 ### Key Findings
-- Final feature count: **213 columns** (122 original + 91 engineered)
+- Final feature count: **218 columns** (122 original + 96 engineered)
 - **99.4%** of applicants have bureau data (305,811 / 307,511)
 - External source scores remain the most predictive features across all transformations
-- Bureau features filled with 0 for applicants without credit history
+- Interaction features (EXT_SOURCE x financial ratios) add cross-domain signals
+- Bureau features filled with 0 for applicants without credit history; HAS_BUREAU_HISTORY flag preserves the distinction
+- EMPLOYMENT_YEARS set to NaN for unemployed/retired (consistent with NB01); signal captured by FLAG_UNEMPLOYED
 - All 307,511 observations preserved through merges
+- Unused data sources (installments_payments, POS_CASH_balance, credit_card_balance) documented as future iteration candidates
 
 ---
 

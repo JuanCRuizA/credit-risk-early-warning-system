@@ -86,28 +86,34 @@ Document key technical decisions, rationale, and alternatives considered during 
 **Date:** 2026-01-25
 **Status:** Implemented
 **Context:** The raw application_train.csv has 122 columns, but credit risk prediction benefits significantly from enrichment with external credit history and previous application patterns.
-**Decision:** Engineer 91 new features from three data sources:
-- 20 features from application data (ratios, time-based, external scores, documents)
+**Decision:** Engineer 96 new features from three data sources:
+- 23 features from application data (ratios, time-based, external scores, interactions, documents)
 - 41 features from bureau data (loan counts, credit types, overdue ratios)
 - 30 features from previous applications (approval rates, contract types, credit ratios)
+- 2 history flags (HAS_BUREAU_HISTORY, HAS_PREV_APPLICATION)
 **Rationale:**
 - **Ratio features** (DEBT_TO_INCOME, PAYMENT_BURDEN) are more informative than raw amounts -- they normalize for income and loan size differences
 - **EXT_SOURCE combinations** (mean, weighted, product, min, max) capture multi-bureau signal better than individual scores
+- **Interaction features** (EXT_SOURCE x PAYMENT_BURDEN, x AGE, x DEBT_RATIO) combine cross-domain signals that neither source captures alone
 - **Bureau history** provides credit behavior context (active loans, overdue ratios, debt-to-credit)
 - **Previous application patterns** reveal relationship history with the lender (approval rate, refusal rate)
 - **FLAG_UNEMPLOYED** captures the DAYS_EMPLOYED anomaly as a binary feature
-- Final feature count (211) provides rich signal for XGBoost without excessive dimensionality
+- **History flags** distinguish "no bureau/previous history" from "history with zero values" -- critical for AI agent narratives
+- **EXT_SOURCE_WEIGHTED** weights (0.2/0.4/0.4) derived from EDA correlations: r = -0.155, -0.161, -0.179
+- Final feature count (216) provides rich signal for XGBoost without excessive dimensionality
 **Alternatives Considered:**
 - Application features only (122 columns): Misses bureau and historical signal
 - All 434 raw columns without engineering: High dimensionality, redundancy, no domain insight
 - Automated feature engineering (Featuretools, tsfresh): Less domain control, harder to explain to regulators
-- Include installments_payments and credit_card_balance: Added complexity for marginal gains (deferred)
+- Include installments_payments and credit_card_balance: Added complexity for marginal gains (deferred and documented)
 **Consequences:**
-- Feature count increases from 122 to 213 (including SK_ID_CURR and TARGET)
-- `features_train.csv` is 363.2 MB (large but manageable)
+- Feature count increases from 122 to 218 (including SK_ID_CURR and TARGET)
+- `features_train.csv` output (large but manageable)
 - 99.4% of applicants have bureau data (good coverage)
-- Bureau/previous features filled with 0 for applicants without history (valid assumption)
+- Bureau/previous features filled with 0 for applicants without history; HAS_BUREAU_HISTORY/HAS_PREV_APPLICATION flags preserve the distinction
+- EMPLOYMENT_YEARS set to NaN for unemployed/retired (consistent with NB01 EDA; signal captured by FLAG_UNEMPLOYED)
 - Division-by-zero handled: ratio features produce NaN when denominator is zero (XGBoost handles natively)
+- Unused data sources (installments_payments, POS_CASH_balance, credit_card_balance) documented as future iteration candidates
 **Related:** `notebooks/02_FeatureEng.ipynb`
 
 ---

@@ -166,3 +166,14 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 **Prevention:** When using LIME for comparison with other methods, always implement a feature name extraction step. Consider using `lime_exp.as_map()` as an alternative that returns feature indices instead of rule strings.
 
 ---
+
+### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
+**Date:** 2026-03-29
+**Status:** Resolved
+**Severity:** Low
+**Problem:** Notebook 01 (EDA) set `EMPLOYMENT_YEARS` to `NaN` for the DAYS_EMPLOYED = 365243 sentinel (unemployed/retired), but Notebook 02 (Feature Engineering) set it to `0`. This inconsistency could surface during an interview review.
+**Root Cause:** The two notebooks were developed at different times. NB01 treated unemployed as "unknown employment duration" (NaN), while NB02 treated it as "zero years of employment" (0). Both are defensible, but the discrepancy means the EDA analysis and feature engineering do not align.
+**Solution:** Changed NB02 to use `np.nan` (matching NB01). XGBoost handles NaN natively by learning optimal split directions, so the signal is preserved. The `FLAG_UNEMPLOYED` binary feature (created on the next line) explicitly captures the unemployed/retired signal.
+**Prevention:** When converting EDA findings into feature engineering, verify that the handling logic matches. Document sentinel value treatment in a single location and reference it from both notebooks.
+
+---
