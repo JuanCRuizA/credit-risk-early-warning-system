@@ -25,6 +25,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-015] PSI Baseline for Concept Drift Monitoring
 - [DECISION-016] Calibration-Enhanced Evaluation (Brier Score + Decile Table)
 - [DECISION-017] Data-Driven Business Cost Parameters (Real AMT_CREDIT Median)
+- [DECISION-018] Bibliographic References as Inline Code Comments in NB03
 
 ### Pending Review
 - None
@@ -222,12 +223,12 @@ Document key technical decisions, rationale, and alternatives considered during 
 ---
 
 ### [DECISION-008] Dual Threshold Strategy (Statistical + Business)
-**Date:** 2026-01-25
+**Date:** 2026-01-25 (updated 2026-04-02)
 **Status:** Implemented
 **Context:** The default threshold (0.5) is arbitrary. Credit risk models need thresholds optimized for both statistical performance and business value.
 **Decision:** Calculate two optimal thresholds:
 - **Statistical optimal (Youden's J):** 0.5092 -- maximizes sensitivity + specificity
-- **Business optimal:** 0.5900 -- maximizes expected profit using cost parameters
+- **Business optimal:** 0.79 -- maximizes expected profit using cost parameters
 **Rationale:**
 - **Two separate concerns**: Statistical performance and business value often conflict
 - **Youden's J** provides the mathematically optimal balance of sensitivity/specificity
@@ -237,19 +238,19 @@ Document key technical decisions, rationale, and alternatives considered during 
   - Cost of default (FN): $308,119
   - Profit per good loan (FP cost): $51,353
   - FN/FP cost ratio: 6:1 (LGD/profit_margin = 0.60/0.10)
-- **Business threshold** maximizes expected profit
+- **Business threshold** maximizes expected profit across the full [0.05, 0.95] range
 - Both thresholds stored in `models/thresholds.pkl` for deployment flexibility
+- **2026-04-02 correction:** Previous threshold of 0.59 was a truncation artifact -- the search range `np.arange(0.05, 0.60, 0.02)` stopped before the true peak. Extended to 0.96 revealed the real optimum at 0.79. See ISSUE-014.
 **Alternatives Considered:**
 - Fixed threshold (0.5): Arbitrary, not optimized for either statistical or business criteria
 - Single threshold (statistical only): Ignores business economics
 - Multi-threshold strategy (like BAFS auto-block/manual review/auto-approve): Considered but simpler binary decision is more appropriate for credit approval (approve/reject)
 - Cost-sensitive learning (custom loss function): More complex, harder to validate
 **Consequences:**
-- At business threshold (0.59): Precision 0.2272, Recall 0.5531
-- Maximum profit: $36,819,000
-- Higher threshold (0.59 vs 0.50) means fewer rejections but some defaults slip through
+- At business threshold (0.79): Only loans with P(default) < 0.21 are approved -- conservative stance justified by 6:1 cost asymmetry
+- The 6:1 FN/FP cost ratio (LGD=60% / profit_margin=10%) means one bad loan wipes out the profit from six good ones, pushing the optimal threshold high
 - Decision shifts from "catch all defaults" to "maximize portfolio profitability"
-**Related:** `notebooks/03_model_training_evaluation.ipynb` (Sections 5-6)
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Sections 5-6), ISSUE-014
 
 ---
 
@@ -497,5 +498,37 @@ Document key technical decisions, rationale, and alternatives considered during 
 - Currency disclaimer added as a markdown blockquote before Section 6
 - DECISION-008 updated to reference data-driven values
 **Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 6), DECISION-008
+
+---
+
+### [DECISION-018] Bibliographic References as Inline Code Comments in NB03
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** Key technical methods in NB03 (Youden's J, profit-based classification, calibration, Brier Score, PSI) are grounded in academic literature. Adding citations directly in the code cells strengthens academic credibility and demonstrates domain awareness.
+**Decision:** Add 2-4 line inline reference comments at the top of 5 code cells in NB03, citing the foundational papers for each technique. Comments placed inside code cells (not separate markdown cells) to keep them co-located with the implementation.
+**References Added:**
+
+| Cell | Section | Paper |
+|------|---------|-------|
+| 16 | 5.1 ROC Curve | Fluss, Faraggi & Reiser (2005). Biometrical Journal, 47(4), 458-472 |
+| 23 | 6.2 Expected Profit | Verbraken, Bravo, Weber & Baesens (2014). EJOR, 238(2), 505-513 |
+| 30 | 8.1 Calibration Curve | Bequé, Coussement, Gayler & Lessmann (2017). KBS, 134, 213-227 |
+| 32 | 8.2 Brier Score | Bequé, Coussement, Gayler & Lessmann (2017). KBS, 134, 213-227 |
+| 34 | 8.3 PSI | Yurdakul & Naranjo (2020). J. Risk Model Validation, 14(4), 89-100 |
+
+**Rationale:**
+- **Co-located with code**: References are immediately visible when reading the implementation, not buried in separate markdown cells that may be skipped
+- **Interview readiness**: Demonstrates the candidate can trace implementation decisions to peer-reviewed research
+- **Accuracy verified**: Each paper-to-code mapping was verified against the actual formulas (Youden's J = TPR - FPR, PSI = sum formula, Brier = MSE of probabilities)
+- **Cell 23 nuance documented**: Comment explicitly notes the code is an "adapted profit-based framework" with fixed parameters, not the full EMP integration from Verbraken et al.
+**Alternatives Considered:**
+- Separate markdown cells per reference: Clutters the notebook structure; references are better as comments alongside the code they support
+- References only in a bibliography at the end: Not visible when reading individual sections
+- Footnotes in section headers: Would require modifying markdown cells and wouldn't be as directly tied to the code
+**Consequences:**
+- 5 code cells now have 4-5 additional comment lines each (no functional code changes)
+- Helper script `src/add_references.py` preserved for reproducibility (one-shot use)
+- References use standard academic citation format (Author (Year). "Title". Journal, Volume(Issue), Pages)
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Cells 16, 23, 30, 32, 34)
 
 ---

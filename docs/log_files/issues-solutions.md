@@ -180,6 +180,21 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 
 ---
 
+### [ISSUE-014] Truncated Threshold Search Range Produced False Business Optimum
+**Date:** 2026-04-02
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** The business-optimal threshold was reported as 0.59, but the profit-vs-threshold graph was cut off at the red dashed line — it was impossible to see whether profit continued rising beyond that point. Visual inspection suggested the trend was still increasing.
+**Root Cause:** The threshold search range in Cell 23 was `np.arange(0.05, 0.60, 0.02)`, which stops at 0.58. The profit curve was still ascending at the right edge, so `idxmax()` simply returned the last evaluated threshold (0.59) as the "optimal" — a truncation artifact, not a true peak.
+**Solution:** Extended the search range to `np.arange(0.05, 0.96, 0.02)`, revealing the true profit peak at **0.79**. Also improved the visualization (Cell 24):
+- Added green/red fill to distinguish positive vs negative profit zones
+- Added red star marker at the peak profit point
+- Added horizontal zero line for break-even reference
+- Extended x-axis to 0.95 to show the full decline after the peak
+**Prevention:** Always verify that optimization search ranges extend well beyond the expected optimum. Visually confirm that the objective function shows a clear peak followed by decline — a graph that ends at the maximum is a red flag for truncation.
+
+---
+
 ### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
 **Date:** 2026-03-29
 **Status:** Resolved

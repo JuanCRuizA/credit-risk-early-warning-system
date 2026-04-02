@@ -139,7 +139,7 @@
 | 2. Data Preparation | Label encoding for 16 categorical columns, stratified train/test split |
 | 3. Train XGBoost Model | 200 estimators, scale_pos_weight=11.39 |
 | 4. Cross-Validation | 5-Fold stratified CV: Mean AUC 0.7757 (+/-0.0037) |
-| 5. Threshold Optimization | Youden's J (0.5092) and business optimal (0.59) |
+| 5. Threshold Optimization | Youden's J (0.5092) and business optimal (0.79) |
 | Currency disclaimer | Note on dataset currency units (not USD); ratios drive conclusions |
 | 6. Business Cost Analysis | Data-driven cost parameters (median AMT_CREDIT), profit maximization |
 | 7. Feature Importance | Top 25 features + category breakdown |
@@ -162,9 +162,9 @@
 | Brier Score | computed in Section 8.2 |
 | PSI (train vs test) | computed in Section 8.3 |
 
-**At Business Threshold (0.59):**
-- Precision: 0.2272
-- Recall: 0.5531
+**At Business Threshold (0.79):**
+- Threshold interpretation: Only approve loans with P(default) < 0.21
+- Conservative stance justified by 6:1 FN/FP cost asymmetry (LGD=60% / profit_margin=10%)
 
 **Confusion Matrix (threshold 0.5):**
 - True Negatives: 41,995 | False Positives: 14,543
@@ -187,7 +187,7 @@
 2. `roc_curve.png` - ROC curve with optimal threshold marker
 3. `precision_recall_curve.png` - PR curve
 4. `threshold_analysis.png` - Precision/Recall/F1 vs threshold
-5. `profit_vs_threshold.png` - Expected profit vs threshold (U-shape)
+5. `profit_vs_threshold.png` - Expected profit vs threshold (full range with green/red fill and peak marker)
 6. `feature_importance.png` - Top 25 features by importance
 7. `feature_importance_by_category.png` - Importance by category (pie chart)
 8. `calibration_curve.png` - Probability calibration check
@@ -197,7 +197,7 @@
 ### Model Artifacts Saved
 - `models/xgb_credit_model.pkl` - Trained XGBoost classifier (546 KB)
 - `models/label_encoders.pkl` - 16 LabelEncoder objects
-- `models/thresholds.pkl` - Statistical (0.5092) + business (0.59) thresholds
+- `models/thresholds.pkl` - Statistical (0.5092) + business (0.79) thresholds
 - `models/feature_names.pkl` - List of 211 feature names
 - `models/model_card.json` - Agent-ready model card (metadata, metrics, risk bands, PSI, calibration, limitations)
 
@@ -214,6 +214,16 @@
   - Section 8.4: Risk Band Classification System (DECISION-014)
   - Section 8.5: Agent-Ready Model Card JSON export (DECISION-014)
   - Summary cell updated with Brier Score, PSI, and model_card.json
+- **2026-04-02**: Bibliographic references added as inline code comments (DECISION-018):
+  - Cell 16: Fluss et al. (2005) — Youden's J statistic
+  - Cell 23: Verbraken et al. (2014) — Profit-based classification
+  - Cell 30: Bequé et al. (2017) — Calibration curve
+  - Cell 32: Bequé et al. (2017) — Brier Score
+  - Cell 34: Yurdakul & Naranjo (2020) — PSI
+- **2026-04-02**: Fixed truncated threshold search range (ISSUE-014):
+  - Extended `np.arange(0.05, 0.60, 0.02)` to `np.arange(0.05, 0.96, 0.02)`
+  - Business-optimal threshold corrected from 0.59 to 0.79
+  - Profit-vs-threshold plot improved: green/red fill, peak star marker, full x-axis range
 
 ---
 
