@@ -167,6 +167,19 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 
 ---
 
+### [ISSUE-013] Notebook JSON Corruption During Programmatic Cell Insertion
+**Date:** 2026-04-02
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** When inserting 8 new cells into NB03 via a Python script, the initial `json.dump()` with `ensure_ascii=False` raised a `UnicodeEncodeError: surrogates not allowed`, partially writing the file and corrupting the notebook JSON.
+**Root Cause:** The original notebook contained non-BMP Unicode characters (emojis like `📊`, `💡`, `🔑` in print statements). Combined with `ensure_ascii=False` on Windows, these caused a surrogate encoding error during JSON serialization. The partial write left the file in an invalid JSON state.
+**Solution:** Two-part fix:
+1. Restored the original notebook from git: `git checkout -- notebooks/03_model_training_evaluation.ipynb`
+2. Changed JSON serialization to `ensure_ascii=True` (escapes all non-ASCII as `\uXXXX` sequences) and added safe-write pattern (write to `.tmp` file first, verify valid JSON, then move to final path)
+**Prevention:** Always use safe-write pattern for notebook modifications: write to temp file, validate JSON, then atomically replace. Use `ensure_ascii=True` when notebook may contain non-BMP Unicode characters.
+
+---
+
 ### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
 **Date:** 2026-03-29
 **Status:** Resolved

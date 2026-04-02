@@ -126,10 +126,10 @@
 
 ## 03_model_training_evaluation.ipynb
 
-**Date:** 2026-01-25 (updated 2026-02-01)
-**Status:** Completed (37 cells)
+**Date:** 2026-01-25 (updated 2026-04-02)
+**Status:** Completed (46 cells)
 **Location:** `notebooks/03_model_training_evaluation.ipynb`
-**Objective:** Train an XGBoost credit risk model with business cost optimization and production-ready threshold selection.
+**Objective:** Train an XGBoost credit risk model with business cost optimization, production-ready threshold selection, and agent-ready output artifacts.
 
 ### Notebook Structure
 
@@ -140,9 +140,14 @@
 | 3. Train XGBoost Model | 200 estimators, scale_pos_weight=11.39 |
 | 4. Cross-Validation | 5-Fold stratified CV: Mean AUC 0.7757 (+/-0.0037) |
 | 5. Threshold Optimization | Youden's J (0.5092) and business optimal (0.59) |
-| 6. Business Cost Analysis | Profit maximization: $36.8M at threshold 0.59 |
+| Currency disclaimer | Note on dataset currency units (not USD); ratios drive conclusions |
+| 6. Business Cost Analysis | Data-driven cost parameters (median AMT_CREDIT), profit maximization |
 | 7. Feature Importance | Top 25 features + category breakdown |
-| 8. Model Calibration | Calibration curve for probability reliability |
+| 8.1 Model Calibration | Calibration curve for probability reliability |
+| 8.2 Brier Score + Decile Table | Quantitative calibration: Brier Score, Brier Skill Score, per-decile predicted vs actual PD |
+| 8.3 PSI: Train vs Test | Population Stability Index baseline for concept drift monitoring |
+| 8.4 Risk Band Classification | 4-tier system (Low/Medium/High/Critical) aligned with NB05 |
+| 8.5 Model Card JSON | Agent-ready JSON with all metadata, metrics, bands, PSI, calibration, limitations |
 | 9. Save Final Model | Pickle files for model, encoders, thresholds, features |
 | 10. Summary | Key metrics, portfolio predictions, database storage |
 
@@ -154,12 +159,12 @@
 | Gini Coefficient | 0.5585 |
 | KS Statistic | 0.421 |
 | Cross-Validation AUC | 0.7757 (+/-0.0037) |
-| Brier Score | 0.156 |
+| Brier Score | computed in Section 8.2 |
+| PSI (train vs test) | computed in Section 8.3 |
 
 **At Business Threshold (0.59):**
 - Precision: 0.2272
 - Recall: 0.5531
-- Maximum Expected Profit: $36,819,000
 
 **Confusion Matrix (threshold 0.5):**
 - True Negatives: 41,995 | False Positives: 14,543
@@ -177,7 +182,7 @@
 9. EXT_SOURCE_PRODUCT (0.0111)
 10. NAME_INCOME_TYPE (0.0106)
 
-### Visualizations (8 total, saved to `reports/Model Performance/`)
+### Visualizations (11 total, saved to `reports/`)
 1. `confusion_matrix_baseline.png` - Confusion matrix (counts + percentages)
 2. `roc_curve.png` - ROC curve with optimal threshold marker
 3. `precision_recall_curve.png` - PR curve
@@ -186,18 +191,29 @@
 6. `feature_importance.png` - Top 25 features by importance
 7. `feature_importance_by_category.png` - Importance by category (pie chart)
 8. `calibration_curve.png` - Probability calibration check
+9. `psi_train_vs_test.png` - PSI dual-panel: overlay histogram + per-bin contribution
+10. `risk_band_distribution.png` - Risk band bar chart with actual default rates
 
 ### Model Artifacts Saved
 - `models/xgb_credit_model.pkl` - Trained XGBoost classifier (546 KB)
 - `models/label_encoders.pkl` - 16 LabelEncoder objects
 - `models/thresholds.pkl` - Statistical (0.5092) + business (0.59) thresholds
 - `models/feature_names.pkl` - List of 211 feature names
+- `models/model_card.json` - Agent-ready model card (metadata, metrics, risk bands, PSI, calibration, limitations)
 
 ### Database Output
 - Full portfolio predictions stored in `portfolio_surveillance.db` (table: `loan_predictions`)
 
-### Issues Encountered & Resolved
-- [ISSUE-009] Spanish text translated to English
+### Changes Log
+- **2026-02-01**: [ISSUE-009] Spanish text translated to English
+- **2026-04-02**: Added 9 new cells (8 new sections + 1 currency disclaimer):
+  - Currency disclaimer before Section 6 (dataset units, not USD)
+  - Section 6 updated: `LOAN_AMOUNT` now uses `df['AMT_CREDIT'].median()` instead of hardcoded $15,000 (DECISION-017)
+  - Section 8.2: Brier Score + Decile Calibration Table (DECISION-016)
+  - Section 8.3: PSI Train vs Test baseline (DECISION-015)
+  - Section 8.4: Risk Band Classification System (DECISION-014)
+  - Section 8.5: Agent-Ready Model Card JSON export (DECISION-014)
+  - Summary cell updated with Brier Score, PSI, and model_card.json
 
 ---
 

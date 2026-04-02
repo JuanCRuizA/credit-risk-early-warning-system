@@ -21,6 +21,10 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-011] SQLite for Portfolio Surveillance Database
 - [DECISION-012] Streamlit with Plotly for Dashboard Deployment
 - [DECISION-013] XGBoost Native Missing Value Handling Over Imputation
+- [DECISION-014] Agent-Ready Model Card JSON + Risk Band Classification
+- [DECISION-015] PSI Baseline for Concept Drift Monitoring
+- [DECISION-016] Calibration-Enhanced Evaluation (Brier Score + Decile Table)
+- [DECISION-017] Data-Driven Business Cost Parameters (Real AMT_CREDIT Median)
 
 ### Pending Review
 - None
@@ -227,12 +231,13 @@ Document key technical decisions, rationale, and alternatives considered during 
 **Rationale:**
 - **Two separate concerns**: Statistical performance and business value often conflict
 - **Youden's J** provides the mathematically optimal balance of sensitivity/specificity
-- **Profit optimization** incorporates real business costs:
-  - Average loan: $15,000
-  - Loss Given Default (LGD): 60%
-  - Cost of default: $9,000
-  - Profit per good loan: $1,500
-- **Business threshold** produces $36.8M maximum expected profit
+- **Profit optimization** incorporates data-driven business costs (updated 2026-04-02):
+  - Average loan: $513,531 (median AMT_CREDIT from dataset; see DECISION-017)
+  - Loss Given Default (LGD): 60% (Basel IRB Foundation, unsecured consumer credit)
+  - Cost of default (FN): $308,119
+  - Profit per good loan (FP cost): $51,353
+  - FN/FP cost ratio: 6:1 (LGD/profit_margin = 0.60/0.10)
+- **Business threshold** maximizes expected profit
 - Both thresholds stored in `models/thresholds.pkl` for deployment flexibility
 **Alternatives Considered:**
 - Fixed threshold (0.5): Arbitrary, not optimized for either statistical or business criteria
@@ -389,5 +394,108 @@ Document key technical decisions, rationale, and alternatives considered during 
 - `EXT_SOURCE_MISSING_COUNT` feature captures the count of unavailable external scores
 - Production inference must pass NaN (not 0 or -1) for missing values to match training behavior
 **Related:** `notebooks/01_eda.ipynb` (Section 4.2), `notebooks/02_FeatureEng.ipynb`
+
+---
+
+### [DECISION-014] Agent-Ready Model Card JSON + Risk Band Classification
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** The AI surveillance agent (NB05) and Streamlit dashboard consume model outputs, but rely on hardcoded values or text-based artifacts. A machine-readable model card enables programmatic access to all model metadata.
+**Decision:** Export a comprehensive `models/model_card.json` containing model metadata, hyperparameters, performance metrics, thresholds, risk bands, top features, PSI baseline, calibration data, and known limitations. Define a 4-tier risk band system (Low/Medium/High/Critical) aligned with NB05 surveillance tiers.
+**Rationale:**
+- **Agent consumption**: JSON is directly parseable by the AI surveillance agent -- no regex or text scraping needed
+- **Risk bands** provide consistent vocabulary across notebooks, dashboard, and agent:
+  - Low (PD < 0.30): Standard monitoring
+  - Medium (0.30-0.50): Enhanced monitoring
+  - High (0.50-0.70): Active review required
+  - Critical (>= 0.70): Immediate intervention
+- **Self-documenting**: The JSON captures the full model specification in one file
+- **Known limitations** explicitly flag EXT_SOURCE_WEIGHTED ~64% NaN rate and CODE_GENDER fair lending concern
+- **Complements** the existing human-readable `reports/model_card.txt` (SR 11-7 format)
+**Alternatives Considered:**
+- YAML model card: Less universal than JSON for programmatic consumption
+- Extend existing model_card.txt: Text format is not machine-parseable
+- MLflow Model Registry: Requires infrastructure setup beyond project scope
+- ONNX model metadata: Limited to model structure, not business context
+**Consequences:**
+- New artifact: `models/model_card.json` (~4-5 KB)
+- Risk bands reusable across NB05, app.py, and future production scoring
+- Must update model_card.json when model is retrained (add to retraining checklist)
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 8.5), `notebooks/05_portfolio_surveillance.ipynb`
+
+---
+
+### [DECISION-015] PSI Baseline for Concept Drift Monitoring
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** The Streamlit dashboard (app.py) displays PSI values that are hardcoded, not computed from actual data. A real PSI baseline is needed for the AI surveillance agent to detect production drift.
+**Decision:** Compute Population Stability Index (PSI) between train and test predicted probability distributions in NB03 as a baseline reference. Use 10 fixed equal-width bins on [0, 1] with epsilon smoothing.
+**Rationale:**
+- **Baseline establishment**: Train-vs-test PSI provides the "no drift" reference value; any production PSI significantly above this indicates real drift
+- **Fixed equal-width bins** (not quantile): Standard for probability PSI in banking; directly comparable across time periods; quantile bins would create tiny intervals near 0 due to skewed PD distribution
+- **Epsilon smoothing** (1e-6): Prevents log(0) errors in empty high-probability bins without materially affecting the PSI value
+- **SR 11-7 compliance**: Demonstrates model stability awareness to regulators
+- **Standard thresholds**: PSI < 0.10 (stable), 0.10-0.25 (monitor), >= 0.25 (recalibrate)
+- **Dual visualization**: Overlay histogram + per-bin PSI contribution chart identifies exactly which probability ranges drive any observed shift
+**Alternatives Considered:**
+- Kolmogorov-Smirnov test: Less standard for credit risk drift monitoring
+- Feature-level PSI (per column): More granular but higher complexity; suitable for production, not baseline
+- Quantile-based bins: Would create unequal bin widths, harder to compare across time periods
+- Chi-squared test: Requires minimum expected frequencies; PSI is more robust with small bins
+**Consequences:**
+- PSI value stored in `model_card.json` under `psi_baseline.train_vs_test`
+- New visualization: `reports/psi_train_vs_test.png`
+- app.py hardcoded PSI values should eventually be replaced with computed values (future task)
+- Adds ~10 seconds to notebook runtime (predict_proba on full training set)
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 8.3), `app.py` (Tab 3)
+
+---
+
+### [DECISION-016] Calibration-Enhanced Evaluation (Brier Score + Decile Table)
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** NB03 Section 8 had only a calibration curve plot -- no quantitative calibration metric (Brier Score) and no per-decile breakdown. These are essential for Basel III/IV Expected Loss calculations and regulatory validation.
+**Decision:** Add Brier Score computation and a 10-decile calibration table (predicted PD vs actual default rate) to NB03 Section 8.
+**Rationale:**
+- **Brier Score** is the standard calibration metric for probability models (lower = better); enables comparison across model versions
+- **Brier Skill Score** (1 - Brier/baseline) contextualizes performance relative to the naive predictor
+- **Decile table** is the regulatory standard for calibration validation: regulators expect to see that predicted PDs align with observed default rates across the risk spectrum
+- **Basel III/IV**: Expected Loss = PD x LGD x EAD; if PD is miscalibrated by decile, EL reserves are misallocated
+- **IFRS 9**: ECL staging (1/2/3) depends on accurate PD thresholds; miscalibration causes incorrect stage assignments
+- **Pred/Actual ratio** per decile: ratio close to 1.0 = well-calibrated; ratio > 1.0 = conservative (overestimates risk); ratio < 1.0 = dangerous (underestimates risk)
+**Alternatives Considered:**
+- Hosmer-Lemeshow test: Statistical test for calibration, but provides less interpretable output than a decile table
+- Platt scaling / isotonic regression: Post-hoc recalibration; not needed if calibration is acceptable
+- Expected Calibration Error (ECE): Used in deep learning; less standard in banking
+**Consequences:**
+- `brier_score` variable available for model_card.json (DECISION-014)
+- `calibration_table` DataFrame shows per-decile predicted vs actual default rates
+- Enables direct comparison with future model versions (Brier Score as benchmark)
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 8.2)
+
+---
+
+### [DECISION-017] Data-Driven Business Cost Parameters (Real AMT_CREDIT Median)
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** Section 6 (Business Cost Analysis) used a hardcoded `LOAN_AMOUNT = 15000` which was an invented proxy. The actual dataset contains `AMT_CREDIT` with median $513,531 in the dataset's currency units.
+**Decision:** Replace the hardcoded loan amount with `df['AMT_CREDIT'].median()` computed dynamically from the data. Add a currency disclaimer noting that '$' notation is used for readability but values are in the dataset's original currency units.
+**Rationale:**
+- **Data traceability**: Using the real median makes the analysis verifiable and defensible in interviews
+- **Median over mean**: Median ($513,531) is more robust to outliers than mean ($599,026); the distribution has a heavy right tail (max $4,050,000)
+- **Same optimal threshold**: The business-optimal threshold depends on the FN/FP cost ratio (LGD/profit_margin = 0.60/0.10 = 6:1), not absolute amounts -- the threshold is unchanged
+- **Currency agnostic**: The cost-benefit framework works regardless of currency because conclusions depend on ratios, not absolute values
+- **Interview readiness**: Shows the candidate uses real data rather than arbitrary assumptions
+**Alternatives Considered:**
+- Keep $15,000 with a disclaimer: Simpler but less credible
+- Use mean instead of median: More sensitive to extreme outliers
+- Calculate per-loan profit function (row-level AMT_CREDIT): More accurate but adds complexity for marginal insight; the portfolio-level analysis already demonstrates the framework
+- Attempt to identify the actual currency: Not documented in the dataset; unnecessary since ratios drive the conclusions
+**Consequences:**
+- LOAN_AMOUNT now computed dynamically: `df['AMT_CREDIT'].median()`
+- Dollar amounts in profit analysis are larger (~34x) but the 6:1 cost ratio and optimal threshold are preserved
+- Currency disclaimer added as a markdown blockquote before Section 6
+- DECISION-008 updated to reference data-driven values
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 6), DECISION-008
 
 ---

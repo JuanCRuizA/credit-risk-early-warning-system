@@ -15,7 +15,9 @@
       "Bash(PYTHONIOENCODING=utf-8 python -c \":*)",
       "Bash(python -c \":*)",
       "Bash(pip show:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "WebFetch(domain:link.springer.com)",
+      "WebFetch(domain:rpc.cfainstitute.org)"
     ],
     "additionalDirectories": [
       "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs"
