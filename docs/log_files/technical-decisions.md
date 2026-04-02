@@ -26,6 +26,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-016] Calibration-Enhanced Evaluation (Brier Score + Decile Table)
 - [DECISION-017] Data-Driven Business Cost Parameters (Real AMT_CREDIT Median)
 - [DECISION-018] Bibliographic References as Inline Code Comments in NB03
+- [DECISION-019] Post-Hoc Isotonic Calibration for Regulatory-Compliant PD Estimates
 
 ### Pending Review
 - None
@@ -530,5 +531,34 @@ Document key technical decisions, rationale, and alternatives considered during 
 - Helper script `src/add_references.py` preserved for reproducibility (one-shot use)
 - References use standard academic citation format (Author (Year). "Title". Journal, Volume(Issue), Pages)
 **Related:** `notebooks/03_model_training_evaluation.ipynb` (Cells 16, 23, 30, 32, 34)
+
+---
+
+### [DECISION-019] Post-Hoc Isotonic Calibration for Regulatory-Compliant PD Estimates
+**Date:** 2026-04-02
+**Status:** Implemented
+**Context:** The calibration curve (Section 8.1) revealed that `scale_pos_weight = 11.39` inflates predicted probabilities 3-5x above observed default rates. The model is a good ranker (AUC 0.7793) but a poor probability estimator. This violates calibration requirements in FINMA Circular 2017/1, Basel IRB (CRR Art. 179), EU AI Act Art. 15, and IFRS 9 ECL staging.
+**Decision:** Apply isotonic regression as a post-hoc calibration step. The calibrator is fitted on training predictions and applied to test predictions, overwriting `y_pred_proba` so all downstream cells (Brier Score, PSI, risk bands, model card) automatically use calibrated probabilities.
+**Rationale:**
+- **Preserves AUC**: Isotonic regression is monotonic — it remaps probabilities without changing the ranking, so AUC and Gini are unchanged
+- **Academic backing**: Bequé et al. (2017), Table 4, recommends isotonic regression as the best-performing calibrator for credit scorecards (already cited in the notebook)
+- **Regulatory compliance**: Calibrated PDs are required for Basel Expected Loss (PD x LGD x EAD), IFRS 9 staging thresholds, FINMA capital calculations, and nDSG right-to-explanation (customers must receive accurate risk assessments)
+- **No retraining needed**: Post-hoc fix applied after model training — avoids the risk of degrading the XGBoost model
+- **Production-ready**: Calibrator is saved as `models/calibrator.pkl` — one additional `calibrator.predict()` call in the inference pipeline
+- **Before/after visualization**: Side-by-side calibration curves demonstrate the fix (saved to `reports/calibration_before_after.png`)
+**Alternatives Considered:**
+- Platt scaling (sigmoid): Assumes a logistic relationship between raw scores and true probabilities — too restrictive for tree-based models where the relationship is non-linear
+- Remove `scale_pos_weight`: Would fix calibration but degrade recall on the minority class (defaults)
+- Retrain with calibrated loss function: More complex, no guaranteed improvement over post-hoc calibration
+- Use `CalibratedClassifierCV` with cross-validation: More principled but significantly more compute time; with 246K training rows, overfitting risk is negligible for isotonic regression
+- Accept poor calibration with disclaimer: Not viable — regulatory requirements are explicit
+**Consequences:**
+- New artifact: `models/calibrator.pkl` (must be loaded alongside model in production)
+- Business-optimal threshold will shift (now computed in calibrated probability space)
+- All downstream metrics (Brier Score, PSI, risk bands, model card) reflect calibrated probabilities
+- Downstream notebooks (NB04, NB05) and app.py must load and apply the calibrator when using raw model predictions — this is a future update task
+- New visualization: `reports/calibration_before_after.png` (powerful interview talking point)
+- PSI cell updated to use calibrated training predictions for a fair train-vs-test comparison
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 8.1b), DECISION-008, Bequé et al. (2017)
 
 ---

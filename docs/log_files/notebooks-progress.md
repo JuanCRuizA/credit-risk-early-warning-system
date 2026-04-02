@@ -127,7 +127,7 @@
 ## 03_model_training_evaluation.ipynb
 
 **Date:** 2026-01-25 (updated 2026-04-02)
-**Status:** Completed (46 cells)
+**Status:** Completed (48 cells)
 **Location:** `notebooks/03_model_training_evaluation.ipynb`
 **Objective:** Train an XGBoost credit risk model with business cost optimization, production-ready threshold selection, and agent-ready output artifacts.
 
@@ -144,6 +144,7 @@
 | 6. Business Cost Analysis | Data-driven cost parameters (median AMT_CREDIT), profit maximization |
 | 7. Feature Importance | Top 25 features + category breakdown |
 | 8.1 Model Calibration | Calibration curve for probability reliability |
+| 8.1b Post-Hoc Calibration | Isotonic regression fix: preserves AUC, corrects inflated PDs |
 | 8.2 Brier Score + Decile Table | Quantitative calibration: Brier Score, Brier Skill Score, per-decile predicted vs actual PD |
 | 8.3 PSI: Train vs Test | Population Stability Index baseline for concept drift monitoring |
 | 8.4 Risk Band Classification | 4-tier system (Low/Medium/High/Critical) aligned with NB05 |
@@ -190,14 +191,16 @@
 5. `profit_vs_threshold.png` - Expected profit vs threshold (full range with green/red fill and peak marker)
 6. `feature_importance.png` - Top 25 features by importance
 7. `feature_importance_by_category.png` - Importance by category (pie chart)
-8. `calibration_curve.png` - Probability calibration check
+8. `calibration_curve.png` - Probability calibration check (pre-calibration)
+8b. `calibration_before_after.png` - Before/after isotonic calibration comparison
 9. `psi_train_vs_test.png` - PSI dual-panel: overlay histogram + per-bin contribution
 10. `risk_band_distribution.png` - Risk band bar chart with actual default rates
 
 ### Model Artifacts Saved
 - `models/xgb_credit_model.pkl` - Trained XGBoost classifier (546 KB)
 - `models/label_encoders.pkl` - 16 LabelEncoder objects
-- `models/thresholds.pkl` - Statistical (0.5092) + business (0.79) thresholds
+- `models/thresholds.pkl` - Statistical (0.5092) + business (calibrated) thresholds
+- `models/calibrator.pkl` - Isotonic regression calibrator for PD correction
 - `models/feature_names.pkl` - List of 211 feature names
 - `models/model_card.json` - Agent-ready model card (metadata, metrics, risk bands, PSI, calibration, limitations)
 
@@ -224,6 +227,13 @@
   - Extended `np.arange(0.05, 0.60, 0.02)` to `np.arange(0.05, 0.96, 0.02)`
   - Business-optimal threshold corrected from 0.59 to 0.79
   - Profit-vs-threshold plot improved: green/red fill, peak star marker, full x-axis range
+- **2026-04-02**: Added post-hoc isotonic calibration (DECISION-019):
+  - New Section 8.1b: Isotonic regression fixes inflated PDs from scale_pos_weight=11.39
+  - Before/after calibration curve visualization
+  - Calibrator saved as models/calibrator.pkl
+  - PSI cell updated to use calibrated training predictions
+  - Model card JSON updated with calibration method
+  - Notebook now 48 cells (was 46)
 
 ---
 
