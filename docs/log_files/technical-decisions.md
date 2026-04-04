@@ -28,6 +28,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-018] Bibliographic References as Inline Code Comments in NB03
 - [DECISION-019] Post-Hoc Isotonic Calibration for Regulatory-Compliant PD Estimates
 - [DECISION-020] Expanded Regulatory Coverage in NB04 (FINMA, Swiss nDSG, EU AI Act)
+- [DECISION-021] Expanded Intro Cell in NB03 to Match NB04 Structure
 
 ### Pending Review
 - None
@@ -588,5 +589,27 @@ Document key technical decisions, rationale, and alternatives considered during 
 - Notebook Scope section clarifies the relationship between all four analytical threads (global SHAP, local SHAP, stability, LIME)
 - Technical References section is the authoritative citation location; inline code comments remain as cross-references
 **Related:** `notebooks/04_model_explainability.ipynb` (Cells 0, 46, 49, 53), DECISION-019, DECISION-009
+
+---
+
+### [DECISION-021] Expanded Intro Cell in NB03 to Match NB04 Structure
+**Date:** 2026-04-04
+**Status:** Implemented
+**Context:** NB03's intro cell listed 6 generic objectives and 3 banking context bullets, underselling a notebook that actually delivers dual threshold optimization, post-hoc calibration, PSI monitoring, risk band classification, and an agent-ready model card. After applying the same diagnosis to NB04 (DECISION-020), the same gap was identified in NB03.
+**Decision:** Rewrite the NB03 intro cell using the same 5-section structure as NB04: Objectives, Regulatory Context, Notebook Scope, Key Banking Context, Technical References.
+**Rationale:**
+- **Portfolio consistency**: Both modeling notebooks now have the same intro structure; a reviewer reading either notebook gets the same level of regulatory and methodological context
+- **Regulatory Context surface**: FINMA 2017/1, FINMA 2023/1, Swiss nDSG, EU AI Act, IFRS 9, and Basel II/III CRR Art. 179 are all referenced in the notebook body but were invisible in the original intro
+- **Notebook Scope**: Explicitly maps each analytical thread (calibration, PSI, risk bands, model card) to its section number — prevents reviewers from missing the most technically sophisticated parts
+- **Technical References**: The 4 papers already cited inline (Fluss 2005, Verbraken 2014, Beque 2017, Yurdakul 2020) are now surfaced in the intro, giving them visibility without duplicating the inline citations
+- **Key Banking Context enriched**: Added the EL formula (PD x LGD x EAD), explicit 6:1 cost asymmetry, and the point that calibration is a regulatory requirement — not just a model quality metric
+**Alternatives Considered:**
+- Add a separate "About this notebook" markdown cell rather than rewriting the intro: Redundant; one intro is cleaner
+- Keep the existing intro and add sections mid-notebook: Loses the portfolio-entry-point value of the intro
+**Consequences:**
+- NB03 intro is now ~50 lines vs original 13; no functional code changes
+- All 4 bibliographic references are now visible in two places: intro (full citation) and inline code comments (cross-reference)
+- Future notebooks (NB05, AI agent) should follow the same 5-section intro structure for consistency
+**Related:** `notebooks/03_model_training_evaluation.ipynb` (Cell 0), DECISION-020
 
 ---

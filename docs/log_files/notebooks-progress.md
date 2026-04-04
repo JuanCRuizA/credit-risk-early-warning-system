@@ -126,7 +126,7 @@
 
 ## 03_model_training_evaluation.ipynb
 
-**Date:** 2026-01-25 (updated 2026-04-02)
+**Date:** 2026-01-25 (updated 2026-04-04)
 **Status:** Completed (48 cells)
 **Location:** `notebooks/03_model_training_evaluation.ipynb`
 **Objective:** Train an XGBoost credit risk model with business cost optimization, production-ready threshold selection, and agent-ready output artifacts.
@@ -216,6 +216,12 @@
 - **2026-04-04**: Created CLAUDE.md in project root with persistent context for Claude Code (project overview, tech stack, notebook status, working principles, regulatory references, language policy, session hygiene instructions)
 
 ### Original Changes Log
+- **2026-04-04**: Expanded intro cell to match NB04 structure (DECISION-021):
+  - Objectives updated to 7 items (added calibration, monitoring baseline, agent-ready artifacts)
+  - Added Regulatory Context section: SR 11-7, Basel II/III CRR Art. 179, IFRS 9, GDPR Art. 22, ECOA, EU AI Act Art. 10/13, FINMA 2017/1, FINMA 2023/1, Swiss nDSG
+  - Added Notebook Scope section mapping each analytical thread to its section number
+  - Expanded Key Banking Context: added EL formula, 6:1 cost ratio, calibration as regulatory requirement
+  - Added Technical References section: Fluss (2005), Verbraken (2014), Beque (2017), Yurdakul (2020)
 - **2026-02-01**: [ISSUE-009] Spanish text translated to English
 - **2026-04-02**: Added 9 new cells (8 new sections + 1 currency disclaimer):
   - Currency disclaimer before Section 6 (dataset units, not USD)
