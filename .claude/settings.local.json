@@ -19,7 +19,8 @@
       "WebFetch(domain:link.springer.com)",
       "WebFetch(domain:rpc.cfainstitute.org)",
       "Bash(PYTHONIOENCODING=utf-8 python src/patch_nb04.py)",
-      "Bash(conda run:*)"
+      "Bash(conda run:*)",
+      "Read(//c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs"

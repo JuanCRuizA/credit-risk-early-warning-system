@@ -29,6 +29,8 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-019] Post-Hoc Isotonic Calibration for Regulatory-Compliant PD Estimates
 - [DECISION-020] Expanded Regulatory Coverage in NB04 (FINMA, Swiss nDSG, EU AI Act)
 - [DECISION-021] Expanded Intro Cell in NB03 to Match NB04 Structure
+- [DECISION-022] Temporal Leakage Assessment Documentation in NB02
+- [DECISION-023] Apply Isotonic Calibrator Throughout NB04
 
 ### Pending Review
 - None
@@ -611,5 +613,52 @@ Document key technical decisions, rationale, and alternatives considered during 
 - All 4 bibliographic references are now visible in two places: intro (full citation) and inline code comments (cross-reference)
 - Future notebooks (NB05, AI agent) should follow the same 5-section intro structure for consistency
 **Related:** `notebooks/03_model_training_evaluation.ipynb` (Cell 0), DECISION-020
+
+---
+
+### [DECISION-022] Temporal Leakage Assessment Documentation in NB02
+**Date:** 2026-04-04
+**Status:** Implemented
+**Context:** External review (Gemini) flagged bureau aggregations in NB02 as a potential temporal leakage risk, specifically `BUREAU_CLOSED_LOAN_COUNT` and `DAYS_CREDIT` aggregations. The reviewer noted the flow "appears temporally clean" but no code evidence existed to support this claim. The absence of documentation is a portfolio risk — a reviewer might assume the issue was overlooked.
+**Decision:** Add a markdown cell before the bureau aggregation code (Section 3.1) documenting the temporal safety analysis, with a reference table for each temporal column. Add inline code comments to the aggregation cell.
+**Rationale:**
+- **bureau.csv is a point-in-time snapshot**: Home Credit captures the credit bureau report at the time of application. All records represent the applicant's credit history as known on the application date
+- **DAYS_CREDIT <= 0 always**: The column encodes days before application (negative integers); no record can have a future-dated credit opening
+- **CREDIT_ACTIVE status is snapshot-based**: "Closed" means closed as of the bureau report date (application date), not after it
+- **DAYS_CREDIT_ENDDATE can be positive**: This is the scheduled end date of the credit, which is known at origination and visible in the bureau report — not a future-leaked outcome
+- **bureau_balance.csv excluded**: This would be the highest-risk leakage source (monthly STATUS values that evolve after application); its exclusion eliminates the main leakage vector
+- **No filter needed**: Adding a `DAYS_CREDIT <= 0` filter would be redundant (the data already satisfies this) and could accidentally exclude records in edge cases
+**Alternatives Considered:**
+- Add a temporal filter (`bureau[bureau['DAYS_CREDIT'] <= 0]`): Redundant given snapshot design; risks introducing bugs with no benefit
+- Leave undocumented: Leaves the portfolio vulnerable to interview questions about data leakage
+**Consequences:**
+- NB02 now 39 cells (was 38); no feature engineering logic changed
+- Temporal safety is explicitly documented and citable in interviews
+- `BUREAU_CLOSED_LOAN_COUNT` is confirmed as a valid feature, not a leakage artifact
+**Related:** `notebooks/02_FeatureEng.ipynb` (Cell 13 — new markdown, Cell 14 — comment)
+
+---
+
+### [DECISION-023] Apply Isotonic Calibrator Throughout NB04
+**Date:** 2026-04-04
+**Status:** Implemented
+**Context:** NB03 Section 8.1b introduced isotonic calibration and saved `calibrator.pkl`. However, NB04 never loaded or applied the calibrator — all SHAP values, waterfall plots, LIME explanations, risk decile analysis, and model card statistics were computed on raw uncalibrated probabilities that are 3–5x inflated. This created an internal inconsistency: NB03 risk bands use calibrated PDs, NB04 explanations use uncalibrated PDs.
+**Decision:** Load `calibrator.pkl` in the artifact loading cell (Cell 3), apply it to `y_pred_proba` immediately after raw prediction (Cell 7), define a `calibrated_predict_fn` wrapper for LIME (Cell 7), update all remaining `model.predict_proba()` calls (Cells 43 and 47), and update LIME `predict_fn` to use the calibrated wrapper (Cells 27, 28, 29).
+**Rationale:**
+- **Consistency**: SHAP values, LIME attributions, and risk decile PDs must all be computed on the same probability scale as NB03's risk bands and model card
+- **Regulatory compliance**: If a regulator reviews the SHAP waterfall plots, the displayed PD must match the calibrated value that drives the actual lending decision — not an inflated raw score
+- **LIME wrapper**: `calibrated_predict_fn` wraps `model.predict_proba` + `calibrator.predict()` so LIME's local linear model is fitted on calibrated probability space, consistent with how the model is actually deployed
+- **AUC unaffected**: Isotonic calibration is monotonic; AUC and Gini are identical for calibrated and uncalibrated predictions. The model card AUC computed in Cell 47 remains valid
+- **y_pred_proba_raw preserved**: The pre-calibration variable is retained in Cell 7 for potential future diagnostic use
+**Alternatives Considered:**
+- Apply calibrator only to the final displayed values, not SHAP inputs: SHAP TreeExplainer operates on raw model outputs internally (not on `y_pred_proba`), so SHAP values themselves are unaffected by calibration — but keeping displayed probabilities calibrated is the right practice for regulatory documentation
+- Skip LIME calibration: LIME uses `predict_fn` for perturbation-based explanation; using uncalibrated predictions would make LIME's local model inconsistent with the deployment environment
+**Consequences:**
+- All NB04 displayed probabilities are now consistent with NB03 calibrated risk bands
+- LIME `predict_fn` is now `calibrated_predict_fn` in all three case studies (Cells 27, 28, 29)
+- Risk decile table (Cell 43) uses calibrated PDs — "Predicted PD ≈ Actual Default Rate" check is now meaningful
+- Model card stats in Cell 47 (AUC, precision, recall) computed with calibrated probabilities
+- NB05 and app.py still need calibrator applied — flagged as future task (noted in DECISION-019 consequences)
+**Related:** `notebooks/04_model_explainability.ipynb` (Cells 3, 7, 27, 28, 29, 43, 47), DECISION-019, `models/calibrator.pkl`
 
 ---

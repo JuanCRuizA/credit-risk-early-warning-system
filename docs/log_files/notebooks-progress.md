@@ -64,8 +64,8 @@
 
 ## 02_FeatureEng.ipynb
 
-**Date:** 2026-01-25 (updated 2026-03-29)
-**Status:** Completed (38 cells)
+**Date:** 2026-01-25 (updated 2026-04-04)
+**Status:** Completed (39 cells)
 **Location:** `notebooks/02_FeatureEng.ipynb`
 **Objective:** Transform raw data into 200+ engineered features integrating application, bureau, and previous application data.
 
@@ -121,6 +121,14 @@
 - EMPLOYMENT_YEARS set to NaN for unemployed/retired (consistent with NB01); signal captured by FLAG_UNEMPLOYED
 - All 307,511 observations preserved through merges
 - Unused data sources (installments_payments, POS_CASH_balance, credit_card_balance) documented as future iteration candidates
+
+### Changes Log
+- **2026-04-04**: Added temporal leakage assessment (DECISION-022):
+  - Inserted new markdown cell before Section 3.1 bureau aggregations with full temporal analysis table
+  - Documents why DAYS_CREDIT (always <= 0), CREDIT_ACTIVE, DAYS_CREDIT_ENDDATE, and BUREAU_CLOSED_LOAN_COUNT are temporally safe
+  - Explains exclusion of bureau_balance.csv as the highest-risk leakage vector
+  - Added inline temporal safety comments to the bureau aggregation code cell
+  - Notebook now 39 cells (was 38)
 
 ---
 
@@ -254,7 +262,7 @@
 ## 04_model_explainability.ipynb
 
 **Date:** 2026-01-25 (updated 2026-04-04)
-**Status:** Completed (51 cells)
+**Status:** Completed (51 cells — calibrator now applied throughout)
 **Location:** `notebooks/04_model_explainability.ipynb`
 **Objective:** Explain XGBoost predictions using SHAP and LIME dual-method analysis for model interpretability, regulatory compliance, and business insights.
 
@@ -327,6 +335,15 @@
 - **Fairness concern**: CODE_GENDER and AGE_YEARS are protected attributes with significant SHAP impact
 - **Model limitations**: False negatives show normal feature values across all dimensions
 - **LIME validates SHAP**: Dual-method explainability confirms top feature attributions are robust across methodologies
+
+### Changes Log
+- **2026-04-04**: Applied isotonic calibrator throughout NB04 (DECISION-023):
+  - Cell 3: Added `calibrator = joblib.load('calibrator.pkl')` alongside existing artifact loads
+  - Cell 7: Applied `calibrator.predict()` to raw probabilities; defined `calibrated_predict_fn` wrapper for LIME
+  - Cells 27, 28, 29: LIME `predict_fn` updated from `model.predict_proba` to `calibrated_predict_fn`
+  - Cell 43: Risk decile probabilities now calibrated
+  - Cell 47: Model card AUC and classification stats now use calibrated probabilities
+  - All SHAP, LIME, and risk band outputs are now consistent with NB03 calibrated PD estimates
 
 ---
 
