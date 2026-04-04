@@ -87,6 +87,9 @@ Desktop.ini
 *.pth
 *.onnx
 
+# ----- SESSION CHAT LOGS -----
+docs/chats/
+
 # ----- LOGS AND OUTPUTS -----
 logs/
 *.log
@@ -110,4 +113,5 @@ reports/*.pdf
 !models/label_encoders_v2.pkl
 !models/categorical_modes.pkl
 !models/population_medians.csv  
-!models/xgb_credit_model.pkl 
+!models/xgb_credit_model.pkl
+!models/calibrator.pkl 
