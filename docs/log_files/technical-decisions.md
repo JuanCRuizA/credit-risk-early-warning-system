@@ -27,6 +27,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-017] Data-Driven Business Cost Parameters (Real AMT_CREDIT Median)
 - [DECISION-018] Bibliographic References as Inline Code Comments in NB03
 - [DECISION-019] Post-Hoc Isotonic Calibration for Regulatory-Compliant PD Estimates
+- [DECISION-020] Expanded Regulatory Coverage in NB04 (FINMA, Swiss nDSG, EU AI Act)
 
 ### Pending Review
 - None
@@ -560,5 +561,32 @@ Document key technical decisions, rationale, and alternatives considered during 
 - New visualization: `reports/calibration_before_after.png` (powerful interview talking point)
 - PSI cell updated to use calibrated training predictions for a fair train-vs-test comparison
 **Related:** `notebooks/03_model_training_evaluation.ipynb` (Section 8.1b), DECISION-008, Bequé et al. (2017)
+
+---
+
+### [DECISION-020] Expanded Regulatory Coverage in NB04 (FINMA, Swiss nDSG, EU AI Act)
+**Date:** 2026-04-04
+**Status:** Implemented
+**Context:** NB04's regulatory references covered only US/EU frameworks (SR 11-7, Basel II/III, GDPR Art. 22, ECOA). The CREWS portfolio targets Swiss and international banking roles, and the project already references FINMA Circular 2017/1 and 2023/1 in NB03 (calibration decision). Consistency across notebooks and alignment with the target audience required extending the regulatory narrative throughout NB04.
+**Decision:** Add EU AI Act Art. 10/13, FINMA Circular 2017/1, FINMA 2023/1, and Swiss nDSG to four locations in NB04: the intro cell, Section 7 header, Section 7.3 compliance table, and the executive summary regulatory readiness checklist. Also add a Notebook Scope section and a Technical References section to the intro cell.
+**Rationale:**
+- **FINMA 2017/1**: Swiss credit risk model governance requires independent validation and documentation — the model card (NB03) and SHAP analysis directly satisfy this
+- **FINMA 2023/1**: Extends the 2017 framework to AI/ML models — requires auditability and explainability of automated decisions; SHAP provides exactly this
+- **Swiss nDSG (2023)**: Grants data subjects the right to explanation for automated individual decisions (analogous to GDPR Art. 22); LIME/SHAP instance-level attributions constitute the required explanation record
+- **EU AI Act Art. 10/13**: Credit scoring is a listed high-risk use case requiring technical documentation and human oversight — NB04's model card and adverse action template address these requirements
+- **Portfolio coherence**: FINMA references already present in NB03 (DECISION-019) and app.py (Regulatory Compliance tab); NB04 must be consistent
+- **Notebook Scope section**: Makes the connection between Kendall's τ (SR 11-7), LIME (cross-validation), and model_card.json (NB03) explicit in the intro — prevents reviewers from missing these design choices
+- **Technical References**: Two papers (Ribeiro et al. 2016; Lin & Wang 2025) cited inline in code cells but not surfaced in the intro; the references section gives them visibility
+**Alternatives Considered:**
+- Add FINMA only to Section 7 (not the intro): Would leave the intro misaligned with the notebook's actual scope
+- Create a dedicated Section 7.4 for Swiss/FINMA compliance: Over-structures a simple addition; bullet lists in existing sections are sufficient
+- Add Lundberg & Lee (2017) as a third paper: Rejected — the two applied papers (LIME + SHAP stability) are more valuable than the foundational SHAP paper, which is universally assumed
+**Consequences:**
+- NB04 intro now matches the regulatory breadth of NB03 and app.py
+- Section 7.3 table extended from 4 to 6 rows (adds FINMA 2017/1 and FINMA 2023/1/nDSG)
+- Executive summary regulatory readiness checklist extended from 4 to 7 items
+- Notebook Scope section clarifies the relationship between all four analytical threads (global SHAP, local SHAP, stability, LIME)
+- Technical References section is the authoritative citation location; inline code comments remain as cross-references
+**Related:** `notebooks/04_model_explainability.ipynb` (Cells 0, 46, 49, 53), DECISION-019, DECISION-009
 
 ---

@@ -208,6 +208,14 @@
 - Full portfolio predictions stored in `portfolio_surveillance.db` (table: `loan_predictions`)
 
 ### Changes Log
+- **2026-04-04**: Expanded regulatory coverage across four cells (DECISION-020):
+  - Cell 0 (intro): Added EU AI Act Art. 10/13, FINMA 2017/1, FINMA 2023/1, Swiss nDSG to Regulatory Context; added Notebook Scope section (LIME, Kendall's τ, model card link); added Technical References section (Ribeiro et al. 2016; Lin & Wang 2025)
+  - Cell 46 (Section 7 header): Added EU AI Act, FINMA 2017/1, FINMA 2023/1, Swiss nDSG to compliance bullet list
+  - Cell 49 (Section 7.3 table): Added FINMA 2017/1 and FINMA 2023/1/Swiss nDSG rows to the regulation-SHAP mapping table
+  - Cell 53 (executive summary): Added three new regulatory readiness checkmarks (FINMA 2017/1 & 2023/1, Swiss nDSG, EU AI Act Art. 10/13)
+- **2026-04-04**: Created CLAUDE.md in project root with persistent context for Claude Code (project overview, tech stack, notebook status, working principles, regulatory references, language policy, session hygiene instructions)
+
+### Original Changes Log
 - **2026-02-01**: [ISSUE-009] Spanish text translated to English
 - **2026-04-02**: Added 9 new cells (8 new sections + 1 currency disclaimer):
   - Currency disclaimer before Section 6 (dataset units, not USD)
@@ -239,7 +247,7 @@
 
 ## 04_model_explainability.ipynb
 
-**Date:** 2026-01-25 (updated 2026-03-28)
+**Date:** 2026-01-25 (updated 2026-04-04)
 **Status:** Completed (51 cells)
 **Location:** `notebooks/04_model_explainability.ipynb`
 **Objective:** Explain XGBoost predictions using SHAP and LIME dual-method analysis for model interpretability, regulatory compliance, and business insights.
