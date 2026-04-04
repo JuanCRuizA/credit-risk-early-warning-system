@@ -9,7 +9,7 @@
   Model Name:           XGBoost Credit Risk Model v1.0
   Model Type:           Gradient Boosted Decision Trees (XGBoost)
   Version:              1.0
-  Documentation Date:   2026-01-25
+  Documentation Date:   2026-04-03
   Model Owner:          Credit Risk Analytics Team
 
 📎 PURPOSE AND INTENDED USE
@@ -39,25 +39,25 @@
   Test Set Size:        61,503 applications (20% holdout)
 
   Discrimination Metrics:
-    • AUC-ROC:          0.7793
-    • Gini Coefficient: 0.5585
+    • AUC-ROC:          0.7778
+    • Gini Coefficient: 0.5556
 
-  At Business Threshold (0.59):
-    • Precision:        0.2272
-    • Recall:           0.5531
+  At Business Threshold (0.79):
+    • Precision:        0.3725
+    • Recall:           0.2216
 
   Cross-Validation:     5-Fold Stratified CV performed
   Stability:            Low variance across folds (model is stable)
 
 🎯 THRESHOLDS AND DECISION RULES
 ────────────────────────────────────────────────────────────────────────────────
-  Statistical Optimal:  0.5092 (Youden's J)
-  Business Optimal:     0.5900 (Profit maximization)
+  Statistical Optimal:  0.5157 (Youden's J)
+  Business Optimal:     0.7900 (Profit maximization)
   Default Threshold:    0.5000
 
   Decision Logic:
-    IF P(default) >= 0.59 THEN REJECT (high risk)
-    IF P(default) <  0.59 THEN APPROVE (acceptable risk)
+    IF P(default) >= 0.79 THEN REJECT (high risk)
+    IF P(default) <  0.79 THEN APPROVE (acceptable risk)
 
 ⚠️  KNOWN LIMITATIONS AND FAILURE MODES
 ────────────────────────────────────────────────────────────────────────────────

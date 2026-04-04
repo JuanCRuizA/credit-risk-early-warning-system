@@ -2,7 +2,7 @@
 📊 TOP 5 BUSINESS INSIGHTS:
 
 1. EXTERNAL CREDIT SCORES ARE PARAMOUNT
-   EXT_SOURCE_MEAN is the #1 predictor with SHAP importance of 0.3905
+   EXT_SOURCE_MEAN is the #1 predictor with SHAP importance of 0.4639
    → Recommendation: Ensure data quality and freshness of external bureau feeds
    → Action: Negotiate SLAs with credit bureaus for real-time data access
 
@@ -31,7 +31,7 @@
 💼 ACTIONABLE RECOMMENDATIONS FOR CREDIT POLICY:
 
 1. THRESHOLD OPTIMIZATION
-   Current business threshold: 0.59
+   Current business threshold: 0.79
    → Consider dynamic thresholds based on economic conditions
    → Implement A/B testing for threshold sensitivity
 
