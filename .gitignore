@@ -90,6 +90,9 @@ Desktop.ini
 # ----- SESSION CHAT LOGS -----
 docs/chats/
 
+# Claude Code local config
+.claude/settings.json
+
 # ----- LOGS AND OUTPUTS -----
 logs/
 *.log

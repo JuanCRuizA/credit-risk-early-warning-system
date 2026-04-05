@@ -1,0 +1,19 @@
+======================================================================
+                    ADVERSE ACTION NOTICE
+======================================================================
+Date:              2026-04-03
+Application ID:    74058
+Decision:          Credit Application Denied
+Predicted PD:      0.7904  (decision threshold: 0.79)
+
+Principal reasons for this decision:
+  1. Average of external credit bureau scores: Value (0.184) strongly increased predicted default risk
+  2. Lowest external credit bureau score: Value (0.0532) strongly increased predicted default risk
+  3. Region Rating Client W City: Value (3) strongly increased predicted default risk
+  4. Annuity To Credit: Value (0.0483) strongly increased predicted default risk
+
+Note: This explanation was generated using SHAP (SHapley Additive
+Explanations), a method grounded in cooperative game theory that
+provides consistent and mathematically rigorous feature attribution
+in compliance with SR 11-7 and ECOA / Regulation B.
+======================================================================
