@@ -59,5 +59,8 @@
    ✓ ECOA adverse action reason codes
    ✓ GDPR right to explanation
    ✓ Internal audit and model validation
+   ✓ FINMA 2017/1 & 2023/1 model governance and auditability requirements
+   ✓ Swiss nDSG right to explanation for automated decisions
+   ✓ EU AI Act high-risk AI documentation (Art. 10/13)
 
 ════════════════════════════════════════════════════════════════════════════════
