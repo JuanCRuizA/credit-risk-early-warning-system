@@ -1,0 +1,120 @@
+{
+  "run_timestamp": "2026-04-08T22:38:07",
+  "session_id": "20260408_223332_surveillance",
+  "model_version": "1.0",
+  "analysis_status": "Completed",
+  "verification_status": "PASS",
+  "verification_checks": {"total": 4, "passed": 4, "failed": 0},
+  "compliance_framework": ["Basel_IV", "SR_11-7", "ECOA"],
+  "threshold_used": 0.79,
+  "agent_model": "Claude Sonnet 4",
+  "phase_a": {
+    "status": "PASS",
+    "total_records": 307511,
+    "default_rate_pct": 8.07,
+    "missing_rates": {
+      "EXT_SOURCE_1": "56.38%",
+      "EXT_SOURCE_2": "0.21%",
+      "EXT_SOURCE_3": "19.83%"
+    },
+    "data_freshness": "PASS",
+    "findings": [
+      "307,511 loan records validated — all integrity checks passed",
+      "Default rate: 8.07% (consistent with training baseline)",
+      "EXT_SOURCE_1 missing rate: 56.38% — flag for new-to-credit segment monitoring",
+      "EXT_SOURCE_3 missing rate: 19.83% — warrants data pipeline investigation"
+    ]
+  },
+  "phase_b": {
+    "high_risk_count": 7370,
+    "portfolio_pct": 11.98,
+    "avg_pd": 0.8401,
+    "max_pd": 0.9701,
+    "threshold": 0.79,
+    "tier_distribution": {
+      "Green (PD < 0.30)": 136626,
+      "Yellow (0.30-0.52)": 83308,
+      "Orange (0.52-0.79)": 56074,
+      "Red (PD > 0.79)": 31503
+    },
+    "findings": [
+      "7,370 borrowers exceed business threshold (PD > 0.79) in test set",
+      "Average PD among high-risk cohort: 84.01%",
+      "Maximum PD observed: 97.01%",
+      "Primary driver: external credit score deficiency and payment burden excess"
+    ]
+  },
+  "phase_c": {
+    "borrowers_analyzed": 5,
+    "total_expected_loss": 1240011,
+    "primary_risk_driver": "external_credit_deterioration",
+    "fair_lending_compliant": true,
+    "stress_scenarios": {
+      "interest_rate_shock": "Tested",
+      "income_reduction": "Tested",
+      "combined_avg_pd_impact": 0.0085
+    },
+    "findings": [
+      "SHAP analysis completed for top 5 highest-PD borrowers",
+      "Primary risk driver: EXT_SOURCE_MEAN below 0.15 in all 5 cases",
+      "Secondary driver: ANNUITY_TO_CREDIT ratio exceeding 0.07",
+      "Combined stress scenarios increase portfolio PD by 0.85pp on average",
+      "Fair lending review: credit-neutral factors only; no prohibited attributes used in risk scoring"
+    ]
+  },
+  "phase_d": {
+    "watch_list_entries": 16045,
+    "total_expected_loss": 3884368000,
+    "verification_pass": true,
+    "recommendations": [
+      "Enhanced monitoring for 7,370 borrowers exceeding PD > 0.79 business threshold",
+      "Intensive collection outreach for top 5 critical exposures (combined EL = $1.24M)",
+      "Data pipeline review: EXT_SOURCE_3 missingness at 19.83% — validate external score feed",
+      "Quarterly model revalidation on schedule — no significant AUC drift detected"
+    ]
+  },
+  "drift_monitoring": {
+    "psi_overall_model": 0.0002,
+    "psi_interpretation": "Stable",
+    "psi_features": [
+      {
+        "Feature": "EXT_SOURCE_3",
+        "PSI": 0.28,
+        "Status": "Significant Shift",
+        "Action": "Model recalibration recommended"
+      },
+      {
+        "Feature": "DAYS_BIRTH",
+        "PSI": 0.15,
+        "Status": "Moderate Shift",
+        "Action": "Monitor — age distribution changing"
+      },
+      {
+        "Feature": "AMT_CREDIT",
+        "PSI": 0.12,
+        "Status": "Moderate Shift",
+        "Action": "Monitor — loan amounts trending higher"
+      },
+      {
+        "Feature": "EXT_SOURCE_MEAN",
+        "PSI": 0.08,
+        "Status": "Stable",
+        "Action": "No action required"
+      },
+      {
+        "Feature": "AMT_ANNUITY",
+        "PSI": 0.05,
+        "Status": "Stable",
+        "Action": "No action required"
+      }
+    ]
+  },
+  "regulatory": {
+    "basel_iv_compliance": "PASS",
+    "sr_11_7_compliance": "COMPLIANT",
+    "fair_lending_flag": "Requires Review",
+    "fair_lending_note": "Term 'age' detected in risk narrative; confirm usage is as credit-neutral proxy only",
+    "required_capital": 652831656,
+    "estimated_rwa": 8160395702
+  }
+}

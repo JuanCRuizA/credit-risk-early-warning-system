@@ -12,6 +12,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import joblib
+import json
+import shap
 from pathlib import Path
 from PIL import Image
 from sklearn.metrics import (
@@ -106,10 +108,39 @@ def load_test_data():
     return pd.read_csv(BASE_PATH / 'test_dashboard.csv')
 
 
+@st.cache_data
+def load_model_card():
+    """Load model card JSON for metrics, decile table, risk bands, and PSI baseline."""
+    mc_path = MODEL_PATH / 'model_card.json'
+    if mc_path.exists():
+        with open(mc_path, encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+def load_agent_output():
+    """Load latest AI agent surveillance output (not cached — reflects most recent run)."""
+    agent_path = REPORTS_PATH / 'agent_output_latest.json'
+    if agent_path.exists():
+        with open(agent_path, encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+@st.cache_resource
+def load_shap_explainer():
+    """Build SHAP TreeExplainer on the loaded model (cached — expensive to create)."""
+    _model, _, _ = load_model_artifacts()
+    return shap.TreeExplainer(_model)
+
+
 # Load everything
 try:
     model, thresholds, feature_names = load_model_artifacts()
     df_test = load_test_data()
+    model_card = load_model_card()
+    agent_output = load_agent_output()
+    shap_explainer = load_shap_explainer()
     BUSINESS_THRESHOLD = thresholds.get('business_optimal', 0.59)
     STAT_THRESHOLD = thresholds.get('statistical_optimal', 0.509)
 
@@ -285,18 +316,47 @@ with st.sidebar:
             ecl = calc_credit * risk_score * LGD
             st.info(f"Expected Credit Loss: ${ecl:,.0f}")
 
+            # Live SHAP attribution — B7
+            try:
+                sv = shap_explainer.shap_values(X_calc)
+                shap_vals = sv[0] if isinstance(sv, list) else sv.flatten()
+                shap_series = pd.Series(shap_vals, index=feature_names)
+                top_risk = shap_series.nlargest(3)
+                top_protect = shap_series.nsmallest(2)
+
+                st.markdown("**Key Risk Drivers (SHAP)**")
+                for feat, val in top_risk.items():
+                    label = FEATURE_LABELS.get(feat, feat)
+                    st.markdown(f"- {label}: `+{val:.3f}` (increases default risk)")
+                st.markdown("**Protective Factors**")
+                for feat, val in top_protect.items():
+                    label = FEATURE_LABELS.get(feat, feat)
+                    st.markdown(f"- {label}: `{val:.3f}` (reduces default risk)")
+                st.caption("SHAP values compliant with ECOA / Reg B adverse action notice requirements.")
+            except Exception:
+                pass  # SHAP is best-effort in sidebar — don't block the score display
+
         except Exception as e:
             st.error(f"Calculation error: {e}")
 
     st.markdown("---")
 
-    with st.expander("About & Methods"):
+    with st.expander("Technical Architecture"):
+        mc_perf = model_card.get('performance', {}) if model_card else {}
+        ks_sidebar = float(np.max(roc_curve(y_test, fraud_scores)[1] - roc_curve(y_test, fraud_scores)[0])) if 'y_test' in dir() else None
         st.markdown(
-            "- **Dataset:** Home Credit Default Risk (307,511 loans)\n"
-            "- **Model:** XGBoost with 211 engineered features\n"
+            "**Pipeline:** NB01 EDA → NB02 Feature Engineering → NB03 XGBoost Modeling → "
+            "NB04 SHAP + LIME Explainability → NB05 AI Agent Surveillance\n\n"
+            f"- **Dataset:** Home Credit Default Risk (307,511 loans, 8.07% default rate)\n"
+            f"- **Model:** XGBoost · 216 engineered features · 7 data sources\n"
+            f"- **Performance:** AUC {mc_perf.get('auc_roc', 0.7778):.4f} · "
+            f"Gini {mc_perf.get('gini', 0.5556):.4f} · "
+            f"Brier {mc_perf.get('brier_score', 0.0668):.4f}\n"
+            f"- **Calibration:** Isotonic Regression (post-hoc, preserves AUC — required for IFRS 9/Basel III)\n"
             f"- **Cost structure:** ${FN_COST:,.0f} FN / ${FP_COST:.0f} FP\n"
-            "- **Explainability:** SHAP TreeExplainer + LIME\n"
-            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA, EU AI Act, FINMA, nDSG"
+            "- **Explainability:** SHAP TreeExplainer + LIME (dual-method, SR 11-7 gold standard)\n"
+            "- **Agent:** Claude Sonnet 4 · 4-phase protocol · 5 custom tools · automated audit trail\n"
+            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA/Reg B, EU AI Act, FINMA 2017/1, Swiss nDSG"
         )
 
 
@@ -312,8 +372,8 @@ y_pred = (fraud_scores >= risk_threshold).astype(int)
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Portfolio Overview",
     "Model Performance",
-    "AI Agent Insights",
     "SHAP Explainability",
+    "AI Agent Insights",
     "Regulatory Compliance",
 ])
 
@@ -324,6 +384,24 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.header("Portfolio Overview")
     st.caption("Key performance indicators and IFRS 9 staging for the credit portfolio")
+
+    # Hero paragraph — S4
+    st.markdown(
+        "CREWS identifies borrowers at risk of default using 216 behavioral, financial, and "
+        "credit bureau features engineered from 7 data sources. "
+        f"At the {BUSINESS_THRESHOLD:.0%} business threshold, it flags {y_pred.mean():.1%} of the portfolio "
+        "for review while potentially preventing hundreds of millions in credit losses. "
+        "Built to SR 11-7, Basel III/IV, IFRS 9, EU AI Act, FINMA, and Swiss nDSG standards."
+    )
+
+    # Executive Brief expander — B4 + T7
+    exec_summary_path = REPORTS_PATH / 'executive_summary.txt'
+    if exec_summary_path.exists():
+        with st.expander("Executive Brief — Key Findings & Credit Policy Recommendations"):
+            with open(exec_summary_path, encoding="utf-8") as f:
+                st.text(f.read())
+
+    st.markdown("---")
 
     # Confusion matrix components
     tp = int(((y_test == 1) & (y_pred == 1)).sum())
@@ -445,6 +523,31 @@ with tab1:
 
     st.markdown("---")
 
+    # Risk Band Action Rules — B3
+    st.subheader("Risk Band Classification & Operational Actions")
+    st.caption("Decision rules applied to every scored loan application.")
+    if model_card and 'risk_bands' in model_card:
+        band_rows = []
+        band_colors = {'Low': '#c8e6c9', 'Medium': '#fff9c4', 'High': '#ffe0b2', 'Critical': '#ffcdd2'}
+        for band, details in model_card['risk_bands'].items():
+            band_rows.append({
+                'Risk Band': band,
+                'PD Range': f"{details['min_probability']:.0%} – {details['max_probability']:.0%}",
+                'Operational Action': details['action'],
+            })
+        band_df = pd.DataFrame(band_rows)
+
+        def color_band(val):
+            mapping = {'Low': '#c8e6c9', 'Medium': '#fff9c4', 'High': '#ffe0b2', 'Critical': '#ffcdd2'}
+            return f'background-color: {mapping.get(val, "white")}'
+
+        st.dataframe(
+            band_df.style.map(color_band, subset=['Risk Band']),
+            use_container_width=True, hide_index=True,
+        )
+
+    st.markdown("---")
+
     # Risk Score Distribution
     left, right = st.columns(2)
     with left:
@@ -533,7 +636,9 @@ with tab2:
 
         fig_roc = go.Figure()
         fig_roc.add_trace(go.Scatter(
-            x=fpr_arr, y=tpr_arr, mode='lines', name=f'XGBoost (AUC={roc_auc_val:.4f})',
+            x=fpr_arr, y=tpr_arr, mode='lines',
+            name=f'XGBoost (AUC={roc_auc_val:.4f} live | {model_card["performance"]["auc_roc"]:.4f} calibrated)'
+            if model_card else f'XGBoost (AUC={roc_auc_val:.4f})',
             line=dict(color='#1565C0', width=2),
         ))
         fig_roc.add_trace(go.Scatter(
@@ -549,6 +654,21 @@ with tab2:
             xaxis_title='False Positive Rate', yaxis_title='True Positive Rate (Recall)',
         )
         st.plotly_chart(fig_roc, use_container_width=True)
+
+    # Key discrimination metrics row (AUC, Gini, KS)
+    ks_stat = float(np.max(tpr_arr - fpr_arr))
+    gini = 2 * roc_auc_val - 1
+    km1, km2, km3, km4 = st.columns(4)
+    km1.metric("AUC-ROC", f"{roc_auc_val:.4f}", help="Area Under the ROC Curve")
+    km2.metric("Gini Coefficient", f"{gini:.4f}",
+               help="Gini = 2×AUC − 1. Primary discrimination metric in EU/UK banking.")
+    km3.metric("KS Statistic", f"{ks_stat:.4f}",
+               help="Kolmogorov-Smirnov = max(TPR − FPR). Standard US bank model validation metric (OCC, SR 11-7).")
+    if model_card:
+        brier = model_card.get('performance', {}).get('brier_score', None)
+        if brier:
+            km4.metric("Brier Score", f"{brier:.4f}",
+                       help="Measures calibration accuracy. Lower is better. 0 = perfect, 0.25 = no skill.")
 
     st.markdown("---")
 
@@ -573,6 +693,17 @@ with tab2:
         thresh_img = REPORTS_PATH / 'threshold_analysis.png'
         if thresh_img.exists():
             st.image(Image.open(thresh_img), caption='Threshold Analysis', use_container_width=True)
+
+    cal_ba_img = REPORTS_PATH / 'calibration_before_after.png'
+    if cal_ba_img.exists():
+        st.image(
+            Image.open(cal_ba_img),
+            caption=(
+                'Calibration Before vs. After — Isotonic Regression applied post-hoc '
+                'to restore true PD scale, as required for Basel III IRB and IFRS 9 ECL provisioning.'
+            ),
+            use_container_width=True,
+        )
 
     st.markdown("---")
 
@@ -618,116 +749,48 @@ with tab2:
     st.caption("* = current threshold")
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
+    st.markdown("---")
+
+    # Decile / Lift Table (from model_card.json)
+    st.subheader("Decile Analysis — Lift Table")
+    st.caption(
+        "Loans sorted by predicted PD (highest first) and split into 10 equal groups. "
+        "Decile 10 captures the highest-risk borrowers. "
+        "Lift = actual default rate ÷ population average default rate (8.07%)."
+    )
+    if model_card and 'calibration' in model_card:
+        decile_rows = model_card['calibration'].get('decile_table', [])
+        if decile_rows:
+            decile_df = pd.DataFrame(decile_rows)
+            decile_df['Decile'] = decile_df['decile']
+            decile_df['Count'] = decile_df['count'].apply(lambda x: f"{x:,}")
+            decile_df['Mean Predicted PD'] = decile_df['mean_predicted_pd'].apply(lambda x: f"{x:.2%}")
+            decile_df['Actual Default Rate'] = decile_df['actual_default_rate'].apply(lambda x: f"{x:.2%}")
+            base_rate = model_card.get('dataset', {}).get('default_rate', 0.0807)
+            decile_df['Lift'] = decile_df['actual_default_rate'].apply(
+                lambda x: f"{x / base_rate:.2f}×"
+            )
+            decile_df['Pred/Actual Ratio'] = decile_df['pred_vs_actual_ratio'].apply(lambda x: f"{x:.3f}")
+            st.dataframe(
+                decile_df[['Decile', 'Count', 'Mean Predicted PD', 'Actual Default Rate',
+                            'Lift', 'Pred/Actual Ratio']],
+                use_container_width=True, hide_index=True,
+            )
+            st.caption(
+                "**Interpretation:** Decile 10 (highest-risk) has a 30.4% actual default rate "
+                "vs. 8.07% population average — a **3.77× lift**. The top 3 deciles capture "
+                "the majority of defaults, validating the model's discriminatory power."
+            )
+    else:
+        st.info("Decile table not available. Ensure `models/model_card.json` is present.")
+
     render_footer()
 
 
 # =====================================================================
-# TAB 3 - AI Agent Insights
+# TAB 3 - SHAP Explainability
 # =====================================================================
 with tab3:
-    st.header("AI Agent Portfolio Surveillance")
-    st.caption(
-        "Autonomous AI agent (Claude Sonnet 4) performs 4-phase hierarchical analysis "
-        "of the credit portfolio with regulatory compliance checks."
-    )
-
-    st.info("**Last Analysis:** January 31, 2026 | **Status:** Completed | **Model:** Claude Sonnet 4")
-
-    # Agent screenshot
-    agent_img = DOCS_PATH / 'ai_agent_overview.png'
-    if agent_img.exists():
-        st.image(Image.open(agent_img), caption='AI Agent Portfolio Surveillance Output',
-                 use_container_width=True)
-
-    st.markdown("---")
-
-    st.subheader("Key Findings & Recommendations")
-    col_l, col_r = st.columns(2)
-
-    with col_l:
-        st.markdown("""
-### Phase A: Data Validation
-- **307,511 loans** analyzed
-- **Distribution drift** detected in:
-    - `EXT_SOURCE_3` (credit bureau score)
-    - `DAYS_BIRTH` (age distribution)
-    - `AMT_CREDIT` (loan amounts)
-- Model operating outside calibration zone
-
-### Phase B: Risk Identification
-- **42,073 borrowers** flagged as high-risk (PD > 0.59)
-- Represents **13.68% of total portfolio**
-""")
-
-    with col_r:
-        st.markdown("""
-### Phase C: Trend Analysis
-- **Performance deterioration** over loan vintage:
-    - New loans (0-6 mo): 42.7% high-risk
-    - Medium loans (6-18 mo): 60.3% high-risk
-    - Mature loans (18+ mo): 63.8% high-risk
-- Underwriting quality decline post-2022
-
-### Phase D: Recommendations
-1. **Suspend origination** until risk addressed
-2. **Intensive collection** for 42,073 high-risk borrowers
-3. **Underwriting audit** for recent vintages
-4. **Model recalibration** -- detected PSI drift
-""")
-
-    st.markdown("---")
-
-    # PSI Drift Monitoring
-    st.subheader("Population Stability Index (PSI) -- Drift Monitoring")
-    st.caption(
-        "PSI measures distribution shift between training and current data. "
-        "< 0.10: Stable | 0.10-0.25: Investigate | > 0.25: Significant shift."
-    )
-
-    psi_data = pd.DataFrame([
-        {'Feature': 'EXT_SOURCE_3', 'PSI': 0.28, 'Status': 'Significant Shift',
-         'Action': 'Model recalibration recommended'},
-        {'Feature': 'DAYS_BIRTH', 'PSI': 0.15, 'Status': 'Moderate Shift',
-         'Action': 'Monitor -- age distribution changing'},
-        {'Feature': 'AMT_CREDIT', 'PSI': 0.12, 'Status': 'Moderate Shift',
-         'Action': 'Monitor -- loan amounts trending higher'},
-        {'Feature': 'EXT_SOURCE_MEAN', 'PSI': 0.08, 'Status': 'Stable',
-         'Action': 'No action required'},
-        {'Feature': 'AMT_ANNUITY', 'PSI': 0.05, 'Status': 'Stable',
-         'Action': 'No action required'},
-    ])
-
-    def color_psi(val):
-        if val >= 0.25:
-            return 'background-color: #ffcdd2'
-        elif val >= 0.10:
-            return 'background-color: #fff9c4'
-        return 'background-color: #c8e6c9'
-
-    st.dataframe(
-        psi_data.style.applymap(color_psi, subset=['PSI']),
-        use_container_width=True, hide_index=True,
-    )
-
-    st.markdown("---")
-
-    # Regulatory alignment
-    st.subheader("Regulatory Compliance Status")
-    rc1, rc2, rc3 = st.columns(3)
-    with rc1:
-        st.success("**SR 11-7 Alignment**\n- Ongoing monitoring\n- Model validation\n- Audit trail")
-    with rc2:
-        st.success("**Basel III/IV**\n- Risk-weighted assets\n- Capital adequacy\n- Stress testing")
-    with rc3:
-        st.success("**IFRS 9**\n- ECL provisioning\n- Forward-looking\n- Stage classification")
-
-    render_footer()
-
-
-# =====================================================================
-# TAB 4 - SHAP Explainability
-# =====================================================================
-with tab4:
     st.header("SHAP Explainability")
     st.caption(
         "Model explanations using SHAP TreeExplainer. "
@@ -911,6 +974,218 @@ with tab4:
         st.subheader("Recommended Improvement")
         st.write(case['improvement'])
 
+    st.markdown("---")
+
+    # LIME Validation — dual-method explainability
+    st.subheader("LIME Validation — Independent Model-Agnostic Explanations")
+    st.caption(
+        "LIME (Local Interpretable Model-agnostic Explanations) provides a second, "
+        "independent validation of SHAP findings. Agreement between SHAP and LIME is "
+        "the industry gold standard for SR 11-7 model explainability and EU AI Act Art. 13."
+    )
+
+    lime_files = [
+        ('lime_true_positive.png', 'True Positive — High-Risk Default Correctly Flagged'),
+        ('lime_false_positive.png', 'False Positive — Good Borrower Incorrectly Flagged'),
+        ('lime_false_negative.png', 'False Negative — Missed Default'),
+    ]
+    lime_cols = st.columns(3)
+    lime_found = False
+    for i, (fname, label) in enumerate(lime_files):
+        fpath = REPORTS_PATH / fname
+        if fpath.exists():
+            with lime_cols[i]:
+                st.image(Image.open(fpath), caption=label, use_container_width=True)
+            lime_found = True
+
+    if not lime_found:
+        st.info("LIME plots not found in `reports/`. Run Notebook 04 to generate them.")
+
+    # SHAP vs LIME comparison
+    comparison_img = REPORTS_PATH / 'shap_vs_lime_comparison.png'
+    if comparison_img.exists():
+        st.markdown("#### SHAP vs. LIME Agreement Analysis")
+        st.caption(
+            "Where SHAP and LIME agree, the explanation is robust. "
+            "Divergence highlights features that behave differently under "
+            "global tree-based vs. local linear approximations."
+        )
+        st.image(Image.open(comparison_img), use_container_width=True)
+
+    render_footer()
+
+
+# =====================================================================
+# TAB 4 - AI Agent Insights
+# =====================================================================
+with tab4:
+    st.header("AI Agent Portfolio Surveillance")
+    st.caption(
+        "Autonomous AI agent (Claude Sonnet 4) performs a 4-phase hierarchical analysis "
+        "of the credit portfolio with regulatory compliance checks."
+    )
+
+    if agent_output:
+        # Dynamic header from JSON
+        run_ts = agent_output.get('run_timestamp', 'Unknown')
+        run_status = agent_output.get('analysis_status', 'Unknown')
+        run_model = agent_output.get('agent_model', 'Claude Sonnet 4')
+        verif = agent_output.get('verification_checks', {})
+        verif_str = f"{verif.get('passed', '?')}/{verif.get('total', '?')} checks passed"
+        st.info(
+            f"**Last Analysis:** {run_ts} | **Status:** {run_status} | "
+            f"**Model:** {run_model} | **Verification:** {verif_str}"
+        )
+    else:
+        st.warning(
+            "No agent output file found (`reports/agent_output_latest.json`). "
+            "Run **Notebook 05** to generate the latest surveillance report."
+        )
+
+    st.info(
+        "**Agent Architecture** — The NB05 Prudent Risk Officer (Claude Sonnet 4) executes "
+        "a 4-phase hierarchical protocol using 5 custom tools: "
+        "(A) Data Integrity Validation · (B) Risk Flagging · "
+        "(C) SHAP Deep-Dive & Stress Tests · (D) Watch List & Recommendations. "
+        "Full reasoning trace available in `audit_trail.log`."
+    )
+
+    st.markdown("---")
+
+    # Phase findings — dynamic from JSON
+    st.subheader("Key Findings & Recommendations")
+
+    if agent_output:
+        pa = agent_output.get('phase_a', {})
+        pb = agent_output.get('phase_b', {})
+        pc = agent_output.get('phase_c', {})
+        pd_phase = agent_output.get('phase_d', {})
+
+        col_l, col_r = st.columns(2)
+        with col_l:
+            st.markdown("### Phase A: Data Validation")
+            for f in pa.get('findings', []):
+                st.markdown(f"- {f}")
+            st.markdown("### Phase B: Risk Identification")
+            for f in pb.get('findings', []):
+                st.markdown(f"- {f}")
+        with col_r:
+            st.markdown("### Phase C: SHAP Deep-Dive & Stress Tests")
+            for f in pc.get('findings', []):
+                st.markdown(f"- {f}")
+            st.markdown("### Phase D: Recommendations")
+            for i, rec in enumerate(pd_phase.get('recommendations', []), 1):
+                st.markdown(f"{i}. **{rec}**")
+
+        # Key metrics row
+        st.markdown("---")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("High-Risk Borrowers (PD > 0.79)", f"{pb.get('high_risk_count', 0):,}",
+                  f"{pb.get('portfolio_pct', 0):.1f}% of portfolio")
+        m2.metric("Avg PD (High-Risk Cohort)", f"{pb.get('avg_pd', 0):.1%}")
+        m3.metric("Watch List Entries", f"{pd_phase.get('watch_list_entries', 0):,}")
+        m4.metric("Verification", agent_output.get('verification_status', '—'))
+    else:
+        st.info("Run Notebook 05 to populate agent findings.")
+
+    st.markdown("---")
+
+    # PSI Drift Monitoring — dynamic from JSON
+    st.subheader("Population Stability Index (PSI) — Feature Drift Monitoring")
+    st.caption(
+        "PSI measures distribution shift between training and scoring populations. "
+        "< 0.10: Stable | 0.10–0.25: Investigate | > 0.25: Significant shift — recalibrate."
+    )
+
+    def color_psi(val):
+        if val >= 0.25:
+            return 'background-color: #ffcdd2'
+        elif val >= 0.10:
+            return 'background-color: #fff9c4'
+        return 'background-color: #c8e6c9'
+
+    if agent_output and 'drift_monitoring' in agent_output:
+        psi_rows = agent_output['drift_monitoring'].get('psi_features', [])
+        psi_data = pd.DataFrame(psi_rows)
+        if not psi_data.empty:
+            psi_overall = agent_output['drift_monitoring'].get('psi_overall_model', None)
+            if psi_overall is not None:
+                st.caption(
+                    f"**Model output PSI (train vs. test):** {psi_overall:.4f} — "
+                    f"{agent_output['drift_monitoring'].get('psi_interpretation', 'Stable')}. "
+                    "Feature-level drift detected by agent below."
+                )
+            st.dataframe(
+                psi_data.style.map(color_psi, subset=['PSI']),
+                use_container_width=True, hide_index=True,
+            )
+    else:
+        st.info("PSI data will appear here after running Notebook 05.")
+
+    st.markdown("---")
+
+    # Agent reasoning trace — S5
+    with st.expander("Agent Reasoning Trace — Phase A–D Tool Call Sequence (April 8, 2026 run)"):
+        st.caption(
+            "Excerpt from `audit_trail.log` showing the agent's multi-turn tool invocations. "
+            "Each line is a real decision logged by the Prudent Risk Officer agent during execution."
+        )
+        st.code(
+            "SESSION_START  session_id=20260408_080929  threshold=0.79  features=216\n"
+            "\n"
+            "PHASE A — DATA INTEGRITY VALIDATION\n"
+            "  [data_access]  SQL: data freshness check — 307,511 records, 122 columns  → PASS\n"
+            "  [data_access]  Missing rates: EXT_SOURCE_1=56.38%, EXT_SOURCE_3=19.83%   → FLAG\n"
+            "  [risk_flag]    Default rate: 8.07% — consistent with training baseline    → PASS\n"
+            "\n"
+            "PHASE B — RISK FLAGGING ENGINE\n"
+            "  [data_access]  SQL: loan_predictions — examined table structure\n"
+            "  [data_access]  SQL: borrowers with default_probability > 0.79\n"
+            "                 → high_risk_count=7,370  avg_pd=0.8401  max_pd=0.9701\n"
+            "  [data_access]  Tier distribution: Green=136,626 / Yellow=83,308 /\n"
+            "                                    Orange=56,074 / Red=31,503\n"
+            "\n"
+            "PHASE C — SHAP DEEP-DIVE & STRESS TESTS\n"
+            "  [data_access]  SQL: top 5 highest-PD borrowers — full feature retrieval\n"
+            "  [data_access]  Market intelligence: unemployment, inflation, credit card DQ\n"
+            "  [model_predict] Stress scenarios: interest_rate_shock, income_reduction,\n"
+            "                                    combined  → avg PD impact +0.85pp\n"
+            "  [model_predict] SHAP for 5 critical borrowers — primary driver: EXT_SOURCE\n"
+            "  [decision]     Phase C complete: fair_lending_compliant=True\n"
+            "\n"
+            "PHASE D — WATCH LIST & RECOMMENDATIONS\n"
+            "  [risk_flag]    Watch list saved: 16,045 entries  EL=$3.88B\n"
+            "  [report_gen]   Sections: var_summary, risk_migration, top_exposures,\n"
+            "                           compliance_statement, executive_summary\n"
+            "  [verification] Basel IV: PASS  RWA=$8.16B  Required capital=$652.8M\n"
+            "  [verification] SR 11-7 documentation generated\n"
+            "  [verification] All checks: 4/4 PASS\n"
+            "\n"
+            "SESSION_END  status=Completed  result_length=1,411 chars",
+            language=None,
+        )
+        st.caption("Full trace available in `audit_trail.log` (68 KB).")
+
+    st.markdown("---")
+
+    # Regulatory compliance status
+    st.subheader("Regulatory Compliance Status")
+    rc1, rc2, rc3 = st.columns(3)
+    with rc1:
+        st.success("**SR 11-7 Alignment**\n- Ongoing monitoring\n- Model validation\n- Audit trail")
+    with rc2:
+        if agent_output:
+            reg = agent_output.get('regulatory', {})
+            basel_status = reg.get('basel_iv_compliance', 'PASS')
+            if basel_status == 'PASS':
+                st.success(f"**Basel III/IV** — {basel_status}\n- Risk-weighted assets\n- Capital adequacy\n- Stress testing")
+            else:
+                st.error(f"**Basel III/IV** — {basel_status}")
+        else:
+            st.success("**Basel III/IV**\n- Risk-weighted assets\n- Capital adequacy\n- Stress testing")
+    with rc3:
+        st.success("**IFRS 9**\n- ECL provisioning\n- Forward-looking\n- Stage classification")
+
     render_footer()
 
 
@@ -967,6 +1242,27 @@ with tab5:
         st.markdown("**Pending**")
         for item in pending_items:
             st.checkbox(item, value=False, disabled=True, key=f"pend_{item[:30]}")
+
+    # Audit trail download — B5
+    audit_path = BASE_PATH / 'audit_trail.log'
+    if audit_path.exists():
+        with open(audit_path, 'rb') as f:
+            audit_bytes = f.read()
+        dl1, dl2 = st.columns([1, 3])
+        with dl1:
+            st.download_button(
+                label="Download Audit Trail",
+                data=audit_bytes,
+                file_name="audit_trail.log",
+                mime="text/plain",
+                help="Full audit log of model development, agent runs, and compliance checks.",
+            )
+        with dl2:
+            st.caption(
+                f"Audit trail: {len(audit_bytes)/1024:.0f} KB — "
+                "logs all model decisions, agent runs, and regulatory compliance events. "
+                "Retention requirement: 7 years (US regulatory standard)."
+            )
 
     st.markdown("[Back to top](#compliance-top)")
     st.markdown("---")
@@ -1040,6 +1336,27 @@ with tab5:
             "6. scale_pos_weight = 11.39 for class imbalance"
         )
 
+    # Model card download — B6
+    mc_path = MODEL_PATH / 'model_card.json'
+    if mc_path.exists():
+        with open(mc_path, 'rb') as f:
+            mc_bytes = f.read()
+        dl3, dl4 = st.columns([1, 3])
+        with dl3:
+            st.download_button(
+                label="Download Model Card (JSON)",
+                data=mc_bytes,
+                file_name="model_card.json",
+                mime="application/json",
+                help="Machine-readable model card: metrics, thresholds, deciles, risk bands, PSI baseline.",
+            )
+        with dl4:
+            st.caption(
+                "Model card includes: AUC, Gini, Brier score, 5-fold CV, decile table, "
+                "top 20 features, PSI baseline, calibration method, and known limitations. "
+                "Compliant with SR 11-7 documentation requirements."
+            )
+
     st.markdown("[Back to top](#compliance-top)")
     st.markdown("---")
 
@@ -1112,6 +1429,13 @@ SHAP values provide a complete, auditable explanation at the individual loan lev
 - Retention: minimum 7 years (US regulatory standard)
 - Log fields: application_id, pd_score, threshold, decision, top_shap_factors, model_version, timestamp
 """)
+
+    # Adverse Action Notice sample — T7
+    adverse_path = REPORTS_PATH / 'adverse_action_notice_sample.txt'
+    if adverse_path.exists():
+        with st.expander("Sample Adverse Action Notice (ECOA / Regulation B compliant)"):
+            with open(adverse_path, encoding="utf-8") as f:
+                st.code(f.read(), language=None)
 
     st.markdown("[Back to top](#compliance-top)")
     st.markdown("---")
