@@ -43,7 +43,7 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 ## Project Showcase
 
 ### AI Agent Portfolio Surveillance
-*Autonomous agent performing hierarchical portfolio health check with 4-phase analysis protocol (Phase A: Data Integrity → Phase B: Risk Flagging → Phase C: SHAP Deep-Dive → Phase D: Watch List & Recommendations)*
+*Autonomous agent performing hierarchical portfolio health check with 5-phase analysis protocol (Phase A: Data Integrity → Phase B: Risk Flagging → Phase C: SHAP Deep-Dive → Phase D: Watch List & Recommendations → Phase E: Verification & Compliance)*
 
 ### Interactive Dashboard
 ![Dashboard Overview](docs/screenshots/dashboard_overview.png)
@@ -168,7 +168,7 @@ credit-risk-early-warning-system/
 - **Cost-sensitive threshold optimization** with business profit maximization (threshold = 0.79)
 - **Isotonic Regression calibration** for regulatory-grade PD estimates (IFRS 9 / Basel III)
 - **Dual SHAP + LIME explainability** for every prediction (SR 11-7 / EU AI Act gold standard)
-- **Autonomous monitoring** via AI agent with 4-phase hierarchical analysis protocol
+- **Autonomous monitoring** via AI agent with 5-phase hierarchical analysis protocol
 
 ---
 
@@ -186,7 +186,7 @@ The autonomous portfolio surveillance agent:
 ### Agent Architecture:
 - **SDK:** Anthropic Claude Sonnet 4
 - **Tools:** 5 custom functions (database query, news search, risk analysis, reporting, audit logging)
-- **Protocol:** Hierarchical 4-phase analysis (validation → flagging → deep-dive → recommendations)
+- **Protocol:** Hierarchical 5-phase analysis (validation → flagging → deep-dive → recommendations → verification)
 - **Explainability:** SHAP-based feature attribution for individual borrower analysis
 
 ---
