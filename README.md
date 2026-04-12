@@ -1,4 +1,4 @@
-# Credit Risk Early Warning System (CREWS)
+# Credit Risk Early Warning System (CREW)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://credit-risk-early-warning-system.streamlit.app)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
