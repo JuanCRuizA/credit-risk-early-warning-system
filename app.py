@@ -291,6 +291,13 @@ with st.sidebar:
             feat_vals['PAYMENT_BURDEN'] = (calc_annuity * 12) / income if income > 0 else 0
             feat_vals['DEBT_TO_INCOME'] = calc_credit / income if income > 0 else 0
 
+            # Derived interaction features expected by the model
+            feat_vals['EXT_SCORE_x_PAYMENT_BURDEN'] = feat_vals['EXT_SOURCE_MEAN'] * feat_vals['PAYMENT_BURDEN']
+            feat_vals['EXT_SCORE_x_AGE'] = feat_vals['EXT_SOURCE_MEAN'] * calc_age
+            feat_vals['EXT_SCORE_x_DEBT_RATIO'] = feat_vals['EXT_SOURCE_MEAN'] * feat_vals['DEBT_TO_INCOME']
+            feat_vals['HAS_BUREAU_HISTORY'] = 1
+            feat_vals['HAS_PREV_APPLICATION'] = 1
+
             # Encode categoricals with population modes
             for col in cat_modes:
                 if col in le_dict:
@@ -300,8 +307,8 @@ with st.sidebar:
                     else:
                         feat_vals[col] = 0
 
-            # Build DataFrame for prediction
-            X_calc = pd.DataFrame([feat_vals[feature_names].values], columns=feature_names)
+            # Build DataFrame for prediction — reindex so any gap features default to 0
+            X_calc = pd.DataFrame([feat_vals.reindex(feature_names, fill_value=0).values], columns=feature_names)
             X_calc = X_calc.replace([np.inf, -np.inf], [10, -10]).fillna(0)
             risk_score = model.predict_proba(X_calc)[:, 1][0]
 
