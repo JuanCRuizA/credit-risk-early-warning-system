@@ -195,6 +195,56 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 
 ---
 
+### [ISSUE-015] pandas `applymap` Deprecation in Dashboard PSI Table
+**Date:** 2026-04-11
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** `AttributeError: DataFrame.style.applymap()` crashed the PSI table cell-coloring code in the Streamlit dashboard.
+**Root Cause:** `applymap` was deprecated in pandas 2.1 and removed. The equivalent element-wise styling method is now `.map()`.
+**Solution:** Changed `psi_data.style.applymap(color_psi)` → `psi_data.style.map(color_psi)` in `app.py`.
+**Prevention:** When upgrading pandas, check for `applymap` usage in any styling code. The method was renamed to `.map()` in pandas 2.1.
+
+---
+
+### [ISSUE-016] UnicodeDecodeError on Windows for Text Files Containing Emoji
+**Date:** 2026-04-11
+**Status:** Resolved
+**Severity:** Critical
+**Problem:** All five Streamlit dashboard tabs crashed with `UnicodeDecodeError: 'charmap' codec can't decode byte 0x90`. The error surfaced when loading `executive_summary.txt` (which contains emoji like 📊, 💼 and box-drawing characters).
+**Root Cause:** Windows uses the `cp1252` codec as the default file encoding. `cp1252` cannot handle emoji or box-drawing characters. Any `open()` call without an explicit `encoding` argument falls back to the system default on Windows.
+**Solution:** Added `encoding='utf-8'` to all four `open()` calls in `app.py`: `load_model_card()`, `load_agent_output()`, the `executive_summary.txt` read block, and the `adverse_action_notice_sample.txt` read block.
+**Prevention:** Always specify `encoding='utf-8'` explicitly on any `open()` call that reads files containing non-ASCII characters. This is especially important for cross-platform projects where files are authored on Linux/Mac but served on Windows.
+
+---
+
+### [ISSUE-017] Risk Calculator KeyError on Interaction Features
+**Date:** 2026-04-11
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** Clicking "Calculate Risk" in the sidebar raised `KeyError: "['EXT_SCORE_x_PAYMENT_BURDEN', 'EXT_SCORE_x_AGE', 'EXT_SCORE_x_DEBT_RATIO', 'HAS_BUREAU_HISTORY', 'HAS_PREV_APPLICATION'] not in index"`.
+**Root Cause:** `population_medians.csv` only contains features present in the raw dataset and simple engineered features. The five interaction and flag features (`EXT_SCORE_x_*`, `HAS_BUREAU_HISTORY`, `HAS_PREV_APPLICATION`) are computed during feature engineering in NB02 but are not included in the medians file. The risk calculator tried to build `X_calc` by direct indexing `feat_vals[feature_names]`, which fails when keys are missing.
+**Solution:** Two-part fix in `app.py`:
+1. Explicitly compute the five missing features from already-set values before building `X_calc`: `EXT_SCORE_x_PAYMENT_BURDEN = EXT_SOURCE_MEAN × PAYMENT_BURDEN`, `EXT_SCORE_x_AGE = EXT_SOURCE_MEAN × calc_age`, `EXT_SCORE_x_DEBT_RATIO = EXT_SOURCE_MEAN × DEBT_TO_INCOME`, `HAS_BUREAU_HISTORY = 1`, `HAS_PREV_APPLICATION = 1`.
+2. Changed `feat_vals[feature_names].values` → `feat_vals.reindex(feature_names, fill_value=0).values` so any remaining gap features default to 0 instead of raising a `KeyError`.
+**Prevention:** When the risk calculator uses `population_medians.csv` as a base, any feature that isn't in that file must be explicitly computed. Use `.reindex(fill_value=0)` as a defensive pattern for future feature additions.
+
+---
+
+### [ISSUE-018] Git Local Config Overriding Global — Contributions Not Credited to Liverpool Account
+**Date:** 2026-04-11
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** GitHub contributions grid showed no activity since 2026-03-23 despite active commits. All recent commits were attributed to `fantastic112172@gmail.com` (a blocked account), not the Liverpool university email linked to the GitHub profile.
+**Root Cause:** An old local repository config (`git config --local`) was setting `user.email = fantastic112172@gmail.com` inside the CREWS repo. Git's config precedence (local > global > system) means the local config silently overrode the correct global config (`j.ruiz-arteaga@liverpool.ac.uk`).
+**Solution:** 
+1. Verified with `git config --local --list` that the local override existed.
+2. Removed it: `git config --local --unset user.email` and `git config --local --unset user.name`.
+3. Amended the stale README commit: `git commit --amend --author="Juan Carlos Ruiz Arteaga <j.ruiz-arteaga@liverpool.ac.uk>" --no-edit`.
+4. Pushed — confirmed 1 contribution on 2026-04-11 in the GitHub grid.
+**Prevention:** After changing GitHub account email, always verify local repo configs with `git config --local --list`. Local overrides are repo-specific and persist independently of global settings.
+
+---
+
 ### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
 **Date:** 2026-03-29
 **Status:** Resolved

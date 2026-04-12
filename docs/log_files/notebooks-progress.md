@@ -349,76 +349,89 @@
 
 ## 05_portfolio_surveillance.ipynb
 
-**Date:** 2026-01-30 (updated 2026-02-01)
-**Status:** Completed (37 cells)
+**Date:** 2026-01-30 (updated 2026-04-08)
+**Status:** Completed (39 cells)
 **Location:** `notebooks/05_portfolio_surveillance.ipynb`
-**Objective:** Build an autonomous AI agent (Claude Sonnet 4) that performs hierarchical portfolio surveillance, risk flagging, stress testing, and regulatory compliance reporting.
+**Objective:** Build an autonomous AI agent (Claude Sonnet 4) that performs hierarchical portfolio surveillance, risk flagging, SHAP deep-dive, watch list generation, and regulatory compliance verification.
 
 ### AI Agent Configuration
 - **Model:** Claude Sonnet 4 (`claude-sonnet-4-20250514`)
 - **Persona:** Prudent Risk Officer
-- **Max Turns:** 15
-- **Tools:** 5 custom decorated functions
-- **System Prompt:** 3,557 characters (hierarchical analysis protocol)
+- **Max Turns:** 20 (increased from 15 after Run 1 consumed turns on failed SHAP attempts)
+- **Tools:** 5 custom JSON-schema tool definitions (not `@tool` decorators — see DECISION-024 reference)
+- **Framework:** ReAct (Yao et al. 2023, arXiv:2210.03629) — Thought → Action → Observation cycles
+- **System Prompt:** hierarchical 5-phase analysis protocol
 
-### Notebook Structure
+### Notebook Structure (39 cells)
 
-| Section | Content |
-|---------|---------|
-| 1. Setup | Load model, encoders, data; initialize SQLite database |
-| 2. Core Agent Architecture | Agent design philosophy, tool definitions, system prompt |
-| 3. Hierarchical Analysis Pipeline | 4-phase analysis (Data Validation -> Risk Flagging -> Deep Dive -> Synthesis) |
-| 3.1 Phase A | Data integrity validation, PSI distribution drift, freshness check |
-| 3.4 Phase B | PD threshold breach detection, behavioral monitoring |
-| 3.7 Phase C | Market intelligence (news), stress testing (3 scenarios), vintage analysis |
-| 3.10 Phase D | Watch list generation, confidence ratings, recommendations |
-| 4. Executive Reporting | VaR calculation, risk migration heatmap, top exposures |
-| 5. Verification & Audit | Fair lending check, Basel IV validation, SR 11-7 documentation |
-| 6. Demonstration | Example agent conversation, business impact summary |
+| Cell | Content |
+|------|---------|
+| 0 | Full intro: series position, 5-tool table, 5-phase pipeline, run metrics, regulatory table |
+| 1–6 | Setup, SQLite load, tool definitions, system prompt, agent loop |
+| 7 | Architecture Decision markdown (TOOL_SCHEMAS vs @tool) |
+| 8–35 | Phase A → D execution, SHAP branch, stress tests, watch list |
+| 36 | Phase E VerificationSubagent trigger (post-agent Python code) |
+| 37 | Clean report display cell (post-processes agent_result for Cell 6.3) |
+| 38 | Business Impact Summary markdown (closing, 7-framework regulatory table) |
+
+### 5-Phase Analysis Protocol
+| Phase | Focus | Key Output |
+|-------|-------|------------|
+| A | Data Integrity | 307,511 records validated, missing rates, freshness |
+| B | Risk Flagging | 7,370 borrowers at PD > 0.79 business threshold |
+| C | SHAP Deep-Dive | Top 5 highest-PD borrowers, stress scenarios |
+| D | Watch List & Recommendations | 16,045 entries, 4 strategic actions |
+| E | Verification & Compliance | 4/4 checks PASS (Basel IV, EL, VaR, rankings) |
 
 ### Tools Implemented
 | Tool | Function | Purpose |
 |------|----------|---------|
 | `query_borrower_database` | `execute_sql_query()` | SQL access to loan_applications and engineered_features tables |
-| `search_financial_news` | `FinancialNewsService` | Market intelligence from NewsAPI |
-| `execute_risk_analysis` | `execute_risk_analysis()` | PD calculations, stress tests, threshold monitoring |
+| `search_financial_news` | `FinancialNewsService` | Market intelligence (mocked stub; production = NewsAPI/Finnhub) |
+| `execute_risk_analysis` | `execute_risk_analysis()` | PD calculations, SHAP branch, stress tests, threshold monitoring |
 | `generate_report_section` | `generate_report_section()` | VaR, risk migration, top exposures, compliance reports |
 | `log_audit_event` | `log_audit_event()` | Timestamped audit trail with JSON data |
 
-### Key Metrics Produced
-- **Portfolio Size:** 307,511 loans analyzed
-- **High-Risk Flagged:** 59,874 borrowers (PD > 0.59)
-- **Watch List:** 60,787 entries generated
-- **Top 10 Expected Loss:** $11,786,710
-- **Total Expected Loss:** $13.6 billion (portfolio-wide estimate)
-- **Stress Test Impact:** +1.14% combined PD increase under adverse scenario
+### Run 2 Metrics (Live execution, 2026-04-08)
+- **Turns:** 20 | **Tool calls:** ~16 | **Cost:** $0.6696 est.
+- **Tokens:** 167,128 input / 11,217 output
+- **High-Risk Flagged:** 7,370 borrowers (PD > 0.79 business threshold)
+- **Watch List:** 16,045 entries | **Combined EL:** $3.88B
+- **Phase E:** 4/4 PASS
+- **PSI (EXT_SOURCE_3):** 0.28 — Significant Shift, model recalibration recommended
 
-### Risk Tier Distribution
+### Risk Tier Distribution (Run 2)
 | Tier | Count | Description |
 |------|-------|-------------|
-| Green | 133,635 | Low risk |
-| Yellow | 85,642 | Moderate risk |
-| Orange | 56,746 | Elevated risk |
-| Red | 31,488 | High risk |
+| Green (PD < 0.30) | 136,626 | Low risk |
+| Yellow (0.30–0.52) | 83,308 | Moderate risk |
+| Orange (0.52–0.79) | 56,074 | Elevated risk |
+| Red (PD > 0.79) | 31,503 | High risk |
 
 ### Compliance Validation Results
 | Check | Status | Notes |
 |-------|--------|-------|
 | Data Integrity | PASS | All critical fields present |
-| Basel IV Capital Adequacy | PASS | CET1/Tier1/Total capital requirements met |
-| Fair Lending (ECOA) | FAIL | Disparate impact analysis requires review |
-| SR 11-7 Documentation | PASS | Model card and validation complete |
-| Verification (4 checks) | PASS | All 4 verification checks passed |
+| Basel IV Capital Adequacy | PASS | Required capital $652.8M, RWA $8.16B |
+| Fair Lending (ECOA) | Requires Review | Term "age" in risk narrative; confirm credit-neutral use |
+| SR 11-7 Documentation | COMPLIANT | Model card and validation complete |
+| Phase E Verification (4 checks) | PASS | EL, VaR, percentages, ranking all verified |
+
+### What Is Real vs Mocked
+- **SQL queries:** Real (SQLite, 307,511 rows)
+- **SHAP:** Real (TreeExplainer on in-memory XGBoost; numeric-only filter applied)
+- **Financial news:** Mocked (structured stub; production would use NewsAPI/Finnhub)
+- **Stress tests:** Real (executed via `exec()` with df_features)
 
 ### Database Tables Created (SQLite: `portfolio_surveillance.db`)
 1. `loan_applications` - Raw application data (307,511 x 122)
-2. `engineered_features` - Engineered features (307,511 x 211)
+2. `engineered_features` - Engineered features (307,511 x 216)
 3. `loan_predictions` - Model predictions with probabilities
 4. `watch_list` - Flagged borrowers for monitoring
 
 ### Key Outputs
 - `audit_trail.log` - Full audit trail with session IDs and timestamps
-- `reports/ai_agent_overview.pptx` - PowerPoint presentation
+- `reports/agent_output_latest.json` - Structured April 8 run data (loaded by dashboard)
 - `portfolio_surveillance.db` - SQLite database (490 MB)
 
 ### Issues Encountered & Resolved
@@ -427,34 +440,48 @@
 - [ISSUE-003] XGBoost dtype incompatibility in stress testing
 - [ISSUE-008] Multiple agent session restarts
 
+### Changes Log
+- **2026-04-08**: Run 2 live execution completed; SHAP alignment fix applied (numeric-only filter on X_calc)
+- **2026-04-08**: Phase E VerificationSubagent added (Cell 36) — judge-agent pattern (Okpala et al. 2025, arXiv:2502.05439)
+- **2026-04-08**: Cell 37 added — clean report display post-processor for Cell 6.3 Tee capture fallback
+- **2026-04-08**: Cell 0 updated to 5-phase protocol; max_turns increased to 20; Cell 38 Business Impact Summary added
+- **2026-04-08**: `reports/agent_output_latest.json` created as structured export of Run 2 metrics for dashboard
+
 ---
 
 ## Streamlit Dashboard (app.py)
 
-**Date:** 2026-01-31 (updated 2026-03-28)
-**Status:** Completed (~1300 lines)
+**Date:** 2026-01-31 (updated 2026-04-11)
+**Status:** Completed — Sprint A/B/C applied (~1,400+ lines)
 **Location:** `app.py` (project root)
-**Objective:** Interactive web dashboard for portfolio visualization, AI agent insights, and model performance metrics.
+**Objective:** Interactive web dashboard for portfolio visualization, model performance, dual explainability, AI agent insights, and regulatory compliance.
 
-### Dashboard Structure
+### Dashboard Structure (5 tabs)
 
 | Tab | Content |
 |-----|---------|
-| Portfolio Overview | 4 KPI cards (Total Loans, High Risk, Default Rate, Model Status); Risk distribution bar chart; Vintage analysis line chart |
-| AI Agent Insights | Last analysis info; AI agent screenshot; 4-phase findings; Regulatory compliance cards (SR 11-7, Basel III/IV, IFRS 9) |
-| Model Performance | 4 metric cards (AUC, Gini, KS, Brier); Model architecture details; Feature engineering summary; Business value; Tech stack |
-| IFRS 9 ECL Analysis | ECL calculations, staging distribution, forward-looking scenarios |
-| Regulatory Compliance | SR 11-7, Fair Lending, Model Governance, IFRS 9 ECL, Right-to-Explanation, Basel III/IV, EU AI Act (2024), FINMA Circular 2017/1, Swiss nDSG |
+| 1 — Portfolio Overview | Hero paragraph; Executive Brief expander (loads `executive_summary.txt`); 4 KPI cards (Total Loans, High Risk, Default Rate, Model Status); Risk Band table from `model_card.json`; Risk distribution bar chart; Vintage analysis line chart |
+| 2 — Model Performance | 4-metric row (AUC/Gini/KS/Brier from `model_card.json`); Decile/lift table; `calibration_before_after.png`; ROC curve with live vs. calibrated AUC legend note |
+| 3 — SHAP Explainability | Global SHAP beeswarm + importance bar chart; 3 waterfall case studies (FN, FP, TP); LIME Validation section (3 LIME plots + `shap_vs_lime_comparison.png`) |
+| 4 — AI Agent Insights | Fully dynamic from `reports/agent_output_latest.json`; Phase A–D KPIs and findings; PSI table with color coding; Agent reasoning trace expander; Basel IV compliance status badge; graceful fallback if JSON absent |
+| 5 — Regulatory Compliance | 8-framework compliance table; audit log download button; model card JSON download button; adverse action notice sample in expander |
 
 ### Sidebar Features
-- Individual Loan Risk Calculator with 4 inputs
-- Color-coded risk display (green/yellow/red)
-- Expected Credit Loss calculation
+- Individual Loan Risk Calculator (4 inputs: credit score, age, loan amount, monthly payment)
+- Color-coded risk display (green/yellow/red) at business threshold 0.79
+- Expected Credit Loss (EL = PD × LGD × EAD) calculation
+- Live SHAP top-3 risk drivers + top-2 protective factors (Sprint B7 — DECISION-026)
+- "Technical Architecture" expander (full 4-layer pipeline)
 
-### Key Metrics Displayed
-- Total Loans: 307,511
-- High-Risk Loans: 42,073 (13.68%)
-- Default Probability: 8.07%
-- ROC-AUC: 0.76 | Gini: 0.518 | KS: 0.421 | Brier: 0.156
+### Key Metrics Displayed (sourced from `model_card.json` and `agent_output_latest.json`)
+- Total Loans: 307,511 | High-Risk (PD > 0.79): 7,370 (11.98%) | Avg PD: 8.07%
+- ROC-AUC: 0.7778 | Gini: 0.5556 | KS: computed live | Brier: 0.0668
+- 5-Fold CV AUC: 0.7755 ± 0.0035
+
+### Changes Log
+- **2026-04-11 Sprint A**: Hero paragraph, Executive Brief expander, Risk Band table, 4-metric KPI row, decile/lift table from model_card.json, calibration_before_after.png, ROC legend with live vs. calibrated AUC note
+- **2026-04-11 Sprint B**: Dynamic Tab 4 (AI Agent) from agent_output_latest.json; LIME Validation section in Tab 3 (SHAP); live SHAP attribution in sidebar (DECISION-026); audit log + model card download buttons in Tab 5; adverse action notice expander; Tab order swapped (SHAP → Tab 3, AI Agent → Tab 4 — DECISION-025)
+- **2026-04-11 Sprint C**: "About & Methods" renamed to "Technical Architecture" with full pipeline description
+- **2026-04-11 Bug fixes**: pandas `applymap` → `.map()` (ISSUE-015); `encoding='utf-8'` on all text file reads (ISSUE-016); interaction features computed in risk calculator (ISSUE-017)
 
 ---

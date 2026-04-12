@@ -23,10 +23,13 @@
       "Read(//c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/**)",
       "Read(//mnt/skills/public/docx/**)",
       "Bash(xargs wc:*)",
-      "Bash(du -sh /c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/*)"
+      "Bash(du -sh /c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/*)",
+      "Read(//c/Users/carlo/.claude/projects/c--Users-carlo-Documents-4-DS-credit-risk-early-warning-system/memory/**)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs"
+      "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs",
+      "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs\\chats",
+      "c:\\Users\\carlo\\.claude\\projects\\c--Users-carlo-Documents-4-DS-credit-risk-early-warning-system\\memory"
     ]
   }
 }

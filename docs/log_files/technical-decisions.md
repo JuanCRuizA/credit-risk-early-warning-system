@@ -31,6 +31,9 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-021] Expanded Intro Cell in NB03 to Match NB04 Structure
 - [DECISION-022] Temporal Leakage Assessment Documentation in NB02
 - [DECISION-023] Apply Isotonic Calibrator Throughout NB04
+- [DECISION-024] Dynamic Agent Output Loading from JSON in Dashboard Tab 4
+- [DECISION-025] Tab Reordering — SHAP Before AI Agent
+- [DECISION-026] Live SHAP Attribution in Sidebar Risk Calculator
 
 ### Pending Review
 - None
@@ -660,5 +663,68 @@ Document key technical decisions, rationale, and alternatives considered during 
 - Model card stats in Cell 47 (AUC, precision, recall) computed with calibrated probabilities
 - NB05 and app.py still need calibrator applied — flagged as future task (noted in DECISION-019 consequences)
 **Related:** `notebooks/04_model_explainability.ipynb` (Cells 3, 7, 27, 28, 29, 43, 47), DECISION-019, `models/calibrator.pkl`
+
+---
+
+### [DECISION-024] Dynamic Agent Output Loading from JSON in Dashboard Tab 4
+**Date:** 2026-04-11
+**Status:** Implemented
+**Context:** Tab 4 (AI Agent Insights) previously displayed a static screenshot of the January 31, 2026 agent run (`ai_agent_overview.pptx` rendered as a broken image). The content was hardcoded and became stale after every new agent run. The April 8, 2026 run produced different metrics (7,370 high-risk borrowers vs 42,073 at the old threshold).
+**Decision:** Create `reports/agent_output_latest.json` as the single source of truth for agent run metrics. Load it dynamically in `app.py` via a `load_agent_output()` function. Tab 4 reads all KPIs, Phase A–D findings, PSI table, and Basel IV compliance status from the JSON at startup.
+**Rationale:**
+- **No stale data**: Every new agent run simply overwrites `agent_output_latest.json`; the dashboard updates automatically without any `app.py` changes
+- **Graceful fallback**: `if agent_output is None: st.info("Run NB05 to generate agent data")` — dashboard never crashes if JSON is absent
+- **Structured for display**: JSON keys map directly to Streamlit widgets (findings lists → `st.write()`, PSI table → `pd.DataFrame`, compliance → color badges)
+- **SR 11-7 traceability**: The JSON includes `run_timestamp`, `session_id`, `model_version`, and `verification_status` — sufficient for audit trail cross-referencing
+**Alternatives Considered:**
+- Read directly from `audit_trail.log` and parse: Complex log parsing, fragile, not structured for display
+- Hardcode April 8 values in `app.py`: Same stale-data problem as before, just with different numbers
+- Load from SQLite: Overkill for a display-only dashboard that doesn't need SQL
+**Consequences:**
+- `reports/agent_output_latest.json` becomes a project convention: each NB05 run should overwrite it
+- Removed broken `ai_agent_overview.pptx` image block; replaced with `st.info()` architecture description
+- `encoding='utf-8'` required on the `open()` call (Windows cp1252 limitation — see ISSUE-016)
+**Related:** `app.py`, `reports/agent_output_latest.json`, `notebooks/05_portfolio_surveillance.ipynb`
+
+---
+
+### [DECISION-025] Tab Reordering — SHAP Explainability Before AI Agent Insights
+**Date:** 2026-04-11
+**Status:** Implemented
+**Context:** Original tab order was: Portfolio Overview → Model Performance → AI Agent Insights → SHAP Explainability → Regulatory Compliance. For a demo video and job interviews, the narrative flow should follow the ML pipeline: you build and validate the model before deploying the agent.
+**Decision:** Swap tabs 3 and 4: new order is Portfolio Overview → Model Performance → SHAP Explainability → AI Agent Insights → Regulatory Compliance.
+**Rationale:**
+- **Pipeline narrative**: EDA → Modeling → Explainability → Agent → Compliance mirrors the notebook sequence (NB01 → NB03 → NB04 → NB05) — the most natural story for an interviewer
+- **SHAP grounds the agent**: A reviewer who sees SHAP feature attributions before the agent demo understands *why* the agent cites EXT_SOURCE_MEAN as the primary risk driver
+- **Regulatory tab last**: Compliance content is the culmination — it references all prior tabs (model card, SHAP, agent audit trail)
+**Alternatives Considered:**
+- Keep original order: AI Agent tab was tab 3, which felt too early before establishing model credibility
+- Move Regulatory to tab 2: Compliance should come after the evidence (model metrics, explanations, agent output) is presented
+**Consequences:**
+- Content blocks for `tab3` and `tab4` swapped in `app.py`; variable names updated accordingly
+- Executed last within Sprint B to avoid conflicts with other tab-level edits
+**Related:** `app.py`
+
+---
+
+### [DECISION-026] Live SHAP Attribution in Sidebar Risk Calculator
+**Date:** 2026-04-11
+**Status:** Implemented
+**Context:** The sidebar risk calculator displayed a raw PD score and color-coded risk band but gave no explanation of *why* the score was high or low. For a banking data science portfolio, showing live explainability at the point of decision is a key differentiator aligned with SR 11-7 and ECOA adverse action requirements.
+**Decision:** After computing the risk score for a custom borrower in the sidebar, run `shap.TreeExplainer` on the single-row `X_calc` and display the top 3 risk-increasing and top 2 risk-decreasing features inline.
+**Rationale:**
+- **SR 11-7 / ECOA alignment**: The adverse action notice standard requires disclosing the principal reasons for a credit decision. Live SHAP in the calculator demonstrates this capability interactively
+- **Interview impact**: Reviewers can enter their own inputs and immediately see which features drive the score — makes the explainability story tangible, not just theoretical
+- **Cached explainer**: `@st.cache_resource` ensures `shap.TreeExplainer` is initialized once; subsequent calculator runs are fast
+- **Defensive wrapping**: The SHAP block is inside a `try/except` — if SHAP fails for any reason, the score still displays and the user sees a silent warning rather than a crash
+**Alternatives Considered:**
+- Show global SHAP importance instead of local SHAP: Global importance doesn't reflect the specific input — less useful for a calculator
+- Use LIME instead of SHAP: LIME is slower (perturbation-based); SHAP TreeExplainer is instantaneous on a single row for tree models
+- No explainability in sidebar (keep it simple): Misses the key regulatory differentiator
+**Consequences:**
+- `load_shap_explainer()` added as a `@st.cache_resource` function loading `models/xgb_credit_model.pkl`
+- SHAP values computed on the exact same `X_calc` used for prediction — guaranteed consistency
+- If SHAP features/model mismatch occurs (e.g., model retrained), the `except` block catches it gracefully
+**Related:** `app.py` (sidebar risk calculator section), DECISION-009, ISSUE-017
 
 ---
