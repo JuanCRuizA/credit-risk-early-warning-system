@@ -32,7 +32,7 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 
 - **Autonomous AI Agent** for portfolio surveillance powered by Claude Sonnet 4 API
 - **Interactive Streamlit Dashboard** with real-time risk assessment
-- **200+ Engineered Features** with XGBoost gradient boosting
+- **216 Engineered Features** with XGBoost gradient boosting across 7 data sources
 - **Dual Explainability (SHAP + LIME)** for regulatory compliance and audit trail
 - **Business Profit Optimization** using cost-sensitive evaluation
 - **Portfolio Analytics** with vintage analysis and distribution drift detection
@@ -43,8 +43,7 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 ## Project Showcase
 
 ### AI Agent Portfolio Surveillance
-![AI Agent Analysis](docs/screenshots/ai_agent_overview.png)
-*Autonomous agent performing hierarchical portfolio health check with 4-phase analysis protocol*
+*Autonomous agent performing hierarchical portfolio health check with 4-phase analysis protocol (Phase A: Data Integrity → Phase B: Risk Flagging → Phase C: SHAP Deep-Dive → Phase D: Watch List & Recommendations)*
 
 ### Interactive Dashboard
 ![Dashboard Overview](docs/screenshots/dashboard_overview.png)
@@ -54,27 +53,26 @@ This project demonstrates a complete Banking Data Science workflow, from data ex
 
 ## Business Impact
 
-The AI surveillance agent identified **critical portfolio risks** requiring immediate action:
+The AI surveillance agent (April 8, 2026 run) identified **key portfolio risks** requiring action:
 
 | Metric | Finding | Impact |
 |--------|---------|--------|
-| **High-Risk Loans** | 42,073 borrowers (13.68% of portfolio) |
-| **Distribution Drift** | EXT_SOURCE_3, DAYS_BIRTH, AMT_CREDIT | Model recalibration required |
-| **Vintage Performance** | 63.8% default rate in mature loans (18+ months) | Underwriting quality decline |
+| **High-Risk Loans** | 7,370 borrowers (11.98% of test portfolio) | PD > 0.79 business threshold |
+| **Distribution Drift** | EXT_SOURCE_3: 19.83% missingness flagged | Data pipeline review required |
+| **Watch List** | 16,045 entries saved | Combined Expected Loss: $3.88B |
 | **Recommendations** | 4 strategic actions generated | Regulatory compliance maintained |
 
 ## Key Results
 - **Portfolio Size**: 307,511 loans
-- **High Risk Loans Identified**: 42,073 (13.68%)
+- **High-Risk Loans Identified**: 7,370 (11.98% at PD > 0.79 business threshold)
 - **Average Default Probability**: 8.07% (baseline rate)
-- **Model Performance**: AUC 0.76, Gini 0.518
+- **Model Performance**: AUC 0.7778, Gini 0.5556
 
-
-### Strategic Recommendations Generated:
-1. **Urgent model recalibration** (4-week timeline) - Model operating outside calibration zone
-2. **Temporary origination suspension** - Risk profile exceeds acceptable thresholds
-3. **Intensive collection strategy** for 42K high-risk borrowers
-4. **Underwriting audit** for post-2022 loan vintages
+### Strategic Recommendations Generated (April 8, 2026):
+1. **Enhanced monitoring** for 7,370 borrowers exceeding PD > 0.79 business threshold
+2. **Intensive collection outreach** for top 5 critical exposures (combined EL = $1.24M)
+3. **Data pipeline review**: EXT_SOURCE_3 missingness at 19.83% — validate external score feed
+4. **Quarterly model revalidation** on schedule — no significant AUC drift detected
 
 ---
 
@@ -112,7 +110,7 @@ This project uses the [Home Credit Default Risk](https://www.kaggle.com/c/home-c
 
 - **307,511** loan applications
 - **122** original features including demographics, credit history, and payment behavior
-- **200+** engineered features through aggregations, ratios, and interactions
+- **216** engineered features through aggregations, ratios, and interactions across 7 data sources
 - Real-world data from a consumer finance provider
 
 ---
@@ -122,12 +120,12 @@ This project uses the [Home Credit Default Risk](https://www.kaggle.com/c/home-c
 credit-risk-early-warning-system/
 ├── notebooks/
 │   ├── 01_eda.ipynb                    # Exploratory Data Analysis
-│   ├── 02_preprocessing.ipynb          # Feature Engineering (200+ features)
+│   ├── 02_preprocessing.ipynb          # Feature Engineering (216 features)
 │   ├── 03_modeling.ipynb               # XGBoost with Class Imbalance Handling
 │   ├── 04_explainability.ipynb         # SHAP Analysis & Model Interpretation
 │   └── 05_portfolio_surveillance.ipynb # AI Agent Implementation (Claude API)
 │
-├── app.py                              # Streamlit Dashboard (3 tabs)
+├── app.py                              # Streamlit Dashboard (5 tabs)
 ├── models/                             # Trained XGBoost Models
 ├── data/                               # Home Credit Default Risk Dataset
 │   ├── raw/                            # Original Kaggle data
@@ -144,7 +142,7 @@ credit-risk-early-warning-system/
 | Category | Technologies |
 |----------|-------------|
 | **Data Processing** | Pandas, NumPy |
-| **Machine Learning** | Scikit-learn, XGBoost with 200+ engineered features|
+| **Machine Learning** | Scikit-learn, XGBoost with 216 engineered features |
 | **Explainability** | SHAP (SHapley Additive exPlanations) values for interpretability |
 | **AI Agent** | Anthropic Claude Sonnet 4 API for autonomous surveillance |
 | **Visualization** | Matplotlib, Seaborn, Plotly |
@@ -158,17 +156,19 @@ credit-risk-early-warning-system/
 
 | Metric | Value | Description |
 |--------|-------|-------------|
-| **ROC-AUC** | 0.76 | Area Under ROC Curve |
-| **Gini Coefficient** | 0.518 | Model discriminatory power |
-| **KS Statistic** | 0.421 | Kolmogorov-Smirnov test |
-| **Brier Score** | 0.156 | Probability calibration |
+| **ROC-AUC** | 0.7778 | Area Under ROC Curve (Isotonic-calibrated) |
+| **Gini Coefficient** | 0.5556 | Model discriminatory power (2×AUC − 1) |
+| **KS Statistic** | computed live | Kolmogorov-Smirnov — displayed in dashboard |
+| **Brier Score** | 0.0668 | Probability calibration accuracy |
+| **5-Fold CV AUC** | 0.7755 ± 0.0035 | Cross-validation stability |
 
 ### Key Technical Achievements:
-- **200+ engineered features** including aggregations, ratios, and interactions
-- **Class imbalance handling** via scale_pos_weight parameter
-- **Cost-sensitive evaluation** with business profit optimization
-- **SHAP explainability** for every prediction (regulatory requirement)
-- **Autonomous monitoring** via AI agent with hierarchical analysis protocol
+- **216 engineered features** across 7 data sources including bureau, previous applications, and ratios
+- **Class imbalance handling** via scale_pos_weight = 11.39
+- **Cost-sensitive threshold optimization** with business profit maximization (threshold = 0.79)
+- **Isotonic Regression calibration** for regulatory-grade PD estimates (IFRS 9 / Basel III)
+- **Dual SHAP + LIME explainability** for every prediction (SR 11-7 / EU AI Act gold standard)
+- **Autonomous monitoring** via AI agent with 4-phase hierarchical analysis protocol
 
 ---
 
@@ -176,7 +176,7 @@ credit-risk-early-warning-system/
 
 The autonomous portfolio surveillance agent:
 - **Analyzes portfolio-level risk metrics** across 307K+ loans
-- **Identifies high-risk customer segments** (PD > 0.59 threshold)
+- **Identifies high-risk customer segments** (PD > 0.79 business-optimal threshold)
 - **Detects distribution drift** in critical credit features
 - **Performs vintage analysis** to identify performance trends
 - **Generates natural language risk reports** with strategic recommendations
@@ -197,9 +197,14 @@ This system is designed to align with international banking standards:
 
 | Framework | Compliance Area |
 |-----------|----------------|
-| **SR 11-7** | Model Risk Management - Ongoing monitoring and validation |
-| **Basel III/IV** | Capital Adequacy - Risk-weighted asset calculation |
-| **IFRS 9** | Expected Credit Loss - Forward-looking provisioning |
+| **SR 11-7** | Model Risk Management — ongoing monitoring and validation |
+| **Basel III/IV** | Capital Adequacy — risk-weighted asset calculation, IRB approach |
+| **IFRS 9** | Expected Credit Loss — forward-looking ECL provisioning (PD × LGD × EAD) |
+| **ECOA / Reg B** | Fair Lending — SHAP-based adverse action notices |
+| **GDPR Art. 22** | Right to Explanation — automated decision transparency (EU) |
+| **EU AI Act (2024)** | High-Risk AI System — Arts. 9–15 (data governance, transparency, human oversight) |
+| **FINMA 2017/1** | Swiss Model Risk Management — model inventory, validation, monitoring |
+| **Swiss nDSG** | Federal Data Protection Act — automated profiling, right to explanation |
 
 ### Credit Risk Fundamentals
 
