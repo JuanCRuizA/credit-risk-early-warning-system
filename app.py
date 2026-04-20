@@ -363,7 +363,7 @@ with st.sidebar:
             f"- **Cost structure:** ${FN_COST:,.0f} FN / ${FP_COST:.0f} FP\n"
             "- **Explainability:** SHAP TreeExplainer + LIME (dual-method, SR 11-7 gold standard)\n"
             "- **Agent:** Claude Sonnet 4 · 4-phase protocol · 5 custom tools · automated audit trail\n"
-            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA/Reg B, EU AI Act, FINMA 2017/1, Swiss nDSG"
+            "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA/Reg B, EU AI Act, FINMA 2017/1, FINMA 2023/1, Swiss nDSG"
         )
 
 
