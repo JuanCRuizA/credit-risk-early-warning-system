@@ -1,5 +1,5 @@
 """
-CREWS - Credit Risk Early Warning System
+CREW - Credit Risk Early Warning System
 Streamlit Dashboard - Interactive Portfolio Analytics & Regulatory Compliance
 
 Run with:
@@ -28,7 +28,7 @@ warnings.filterwarnings('ignore')
 # Page Configuration
 # =====================================================================
 st.set_page_config(
-    page_title="CREWS - Credit Risk Early Warning System",
+    page_title="CREW - Credit Risk Early Warning System",
     page_icon=":shield:",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -192,7 +192,7 @@ FEATURE_LABELS = {
 # =====================================================================
 FOOTER_HTML = """
 <div class="footer">
-    <strong>CREWS - Credit Risk Early Warning System</strong><br>
+    <strong>CREW - Credit Risk Early Warning System</strong><br>
     <a href="https://github.com/JuanCRuizA/credit-risk-early-warning-system"
        target="_blank">
         https://github.com/JuanCRuizA/credit-risk-early-warning-system
@@ -213,7 +213,7 @@ def render_footer():
 # Sidebar - Global Configuration
 # =====================================================================
 with st.sidebar:
-    st.title("CREWS")
+    st.title("CREW")
     st.caption("Credit Risk Early Warning System")
     st.markdown("---")
 
@@ -394,7 +394,7 @@ with tab1:
 
     # Hero paragraph — S4
     st.markdown(
-        "CREWS identifies borrowers at risk of default using 216 behavioral, financial, and "
+        "CREW identifies borrowers at risk of default using 216 behavioral, financial, and "
         "credit bureau features engineered from 7 data sources. "
         f"At the {BUSINESS_THRESHOLD:.0%} business threshold, it flags {y_pred.mean():.1%} of the portfolio "
         "for review while potentially preventing hundreds of millions in credit losses. "
@@ -1310,7 +1310,7 @@ with tab5:
     gov1, gov2 = st.columns(2)
     with gov1:
         st.markdown("**Model Identification**")
-        st.text("Name:     CREWS (XGBoost Credit Risk Model)")
+        st.text("Name:     CREW (XGBoost Credit Risk Model)")
         st.text("Version:  1.0")
         st.text("Type:     Gradient Boosted Decision Tree")
         st.text("Purpose:  Credit default probability estimation")
@@ -1455,7 +1455,7 @@ SHAP values provide a complete, auditable explanation at the individual loan lev
 
 Under the Basel IRB approach, risk weights are derived from PD, LGD, and EAD:
 
-| Parameter | CREWS Value | Source |
+| Parameter | CREW Value | Source |
 |-----------|-------------|--------|
 | PD (portfolio average) | 8.07% | XGBoost model output |
 | LGD | 45% | Basel IRB foundation (unsecured) |
@@ -1477,7 +1477,7 @@ Under the Basel IRB approach, risk weights are derived from PD, LGD, and EAD:
 - Results feed into capital adequacy assessment
 
 **Model Use in Basel Framework:**
-- CREWS PD estimates can serve as PIT (Point-in-Time) inputs to IRB calculations
+- CREW PD estimates can serve as PIT (Point-in-Time) inputs to IRB calculations
 - For TTC (Through-the-Cycle) PD required by some jurisdictions, apply long-run average adjustment
 - Model performance (AUC 0.779, Gini 0.559) meets minimum discrimination requirements for IRB approval
 """)
@@ -1489,7 +1489,7 @@ Under the Basel IRB approach, risk weights are derived from PD, LGD, and EAD:
     st.subheader("7. EU AI Act (2024) Compliance", anchor="eu-ai-act")
 
     st.markdown("""
-**Classification:** CREWS is a **high-risk AI system** under the EU AI Act.
+**Classification:** CREW is a **high-risk AI system** under the EU AI Act.
 
 **Legal Basis:** Regulation (EU) 2024/1689, Annex III, Section 5(b):
 > *"AI systems intended to be used to evaluate the creditworthiness of natural persons
@@ -1501,31 +1501,31 @@ This classification triggers mandatory requirements under Title III, Chapter 2 (
     eu_ai_data = pd.DataFrame([
         {'Requirement': 'Art. 9 -- Risk Management System',
          'Status': 'PARTIAL',
-         'CREWS Implementation': 'SHAP+LIME dual explainability, business threshold optimization, stress testing in Notebook 05. Residual risk: model drift monitoring is designed but not yet automated in production.'},
+         'CREW Implementation': 'SHAP+LIME dual explainability, business threshold optimization, stress testing in Notebook 05. Residual risk: model drift monitoring is designed but not yet automated in production.'},
         {'Requirement': 'Art. 10 -- Data Governance',
          'Status': 'COMPLIANT',
-         'CREWS Implementation': 'Home Credit dataset with documented provenance. EDA (Notebook 01) covers data quality, missing value strategy, outlier analysis. Feature engineering documented in Notebook 02.'},
+         'CREW Implementation': 'Home Credit dataset with documented provenance. EDA (Notebook 01) covers data quality, missing value strategy, outlier analysis. Feature engineering documented in Notebook 02.'},
         {'Requirement': 'Art. 11 -- Technical Documentation',
          'Status': 'COMPLIANT',
-         'CREWS Implementation': 'Model card (reports/model_card.txt), technical decisions log, 5 notebooks with full methodology. SHAP feature importance archived.'},
+         'CREW Implementation': 'Model card (reports/model_card.txt), technical decisions log, 5 notebooks with full methodology. SHAP feature importance archived.'},
         {'Requirement': 'Art. 12 -- Record-Keeping',
          'Status': 'COMPLIANT',
-         'CREWS Implementation': 'Audit trail logging (audit_trail.log) with session IDs, timestamps, and action summaries. SHAP values stored per decision.'},
+         'CREW Implementation': 'Audit trail logging (audit_trail.log) with session IDs, timestamps, and action summaries. SHAP values stored per decision.'},
         {'Requirement': 'Art. 13 -- Transparency',
          'Status': 'COMPLIANT',
-         'CREWS Implementation': 'SHAP waterfall plots for individual decisions. LIME provides independent model-agnostic validation. Adverse action notice generation capability.'},
+         'CREW Implementation': 'SHAP waterfall plots for individual decisions. LIME provides independent model-agnostic validation. Adverse action notice generation capability.'},
         {'Requirement': 'Art. 14 -- Human Oversight',
          'Status': 'PARTIAL',
-         'CREWS Implementation': 'Dashboard enables human review of flagged loans. Business threshold allows manual override. Full automation not implemented (human-in-the-loop by design).'},
+         'CREW Implementation': 'Dashboard enables human review of flagged loans. Business threshold allows manual override. Full automation not implemented (human-in-the-loop by design).'},
         {'Requirement': 'Art. 15 -- Accuracy & Robustness',
          'Status': 'COMPLIANT',
-         'CREWS Implementation': 'AUC 0.7793, 5-fold CV stability (std 0.0037), calibration curve analysis, stress testing under 3 macroeconomic scenarios.'},
+         'CREW Implementation': 'AUC 0.7793, 5-fold CV stability (std 0.0037), calibration curve analysis, stress testing under 3 macroeconomic scenarios.'},
     ])
     st.table(eu_ai_data)
 
     st.markdown(
         "**Timeline:** EU AI Act entered into force August 2024. High-risk AI system "
-        "requirements apply from August 2026 (24-month transition). CREWS documentation "
+        "requirements apply from August 2026 (24-month transition). CREW documentation "
         "is designed to meet these requirements proactively."
     )
 
@@ -1538,38 +1538,38 @@ This classification triggers mandatory requirements under Title III, Chapter 2 (
     st.markdown("""
 **Applicability:** FINMA (Swiss Financial Market Supervisory Authority) Circular 2017/1
 "Corporate Governance -- Banks" establishes model risk management requirements for
-banks operating in Switzerland. While CREWS is a portfolio project, its design aligns
+banks operating in Switzerland. While CREW is a portfolio project, its design aligns
 with FINMA expectations for credit risk models used in supervised institutions.
 
-**Key FINMA Requirements and CREWS Alignment:**
+**Key FINMA Requirements and CREW Alignment:**
 """)
 
     finma_data = pd.DataFrame([
         {'FINMA Requirement': 'Model Inventory & Classification',
          'Principle': 'All models must be inventoried with risk tier classification',
-         'CREWS Status': 'Model Governance section (Section 3) classifies CREWS as Tier 2 (Material). Model identification includes name, version, type, purpose, and date.'},
+         'CREW Status': 'Model Governance section (Section 3) classifies CREW as Tier 2 (Material). Model identification includes name, version, type, purpose, and date.'},
         {'FINMA Requirement': 'Independent Model Validation',
          'Principle': 'Models must be validated by a function independent from development',
-         'CREWS Status': 'Pending -- listed in Production Readiness Checklist. 5-fold cross-validation and holdout test set provide quantitative validation. Second-line review recommended.'},
+         'CREW Status': 'Pending -- listed in Production Readiness Checklist. 5-fold cross-validation and holdout test set provide quantitative validation. Second-line review recommended.'},
         {'FINMA Requirement': 'Model Documentation',
          'Principle': 'Complete documentation of methodology, assumptions, and limitations',
-         'CREWS Status': 'Compliant -- model card, technical decisions log (13 decisions), 5 documented notebooks, SHAP analysis with business interpretation.'},
+         'CREW Status': 'Compliant -- model card, technical decisions log (13 decisions), 5 documented notebooks, SHAP analysis with business interpretation.'},
         {'FINMA Requirement': 'Ongoing Monitoring',
          'Principle': 'Regular performance monitoring and backtesting',
-         'CREWS Status': 'Monitoring schedule defined (daily/weekly/monthly/quarterly/annual). PSI drift detection designed in AI agent. Automated revalidation pending.'},
+         'CREW Status': 'Monitoring schedule defined (daily/weekly/monthly/quarterly/annual). PSI drift detection designed in AI agent. Automated revalidation pending.'},
         {'FINMA Requirement': 'Stress Testing',
          'Principle': 'Models must be stress tested under adverse scenarios',
-         'CREWS Status': 'Compliant -- 3 stress scenarios implemented in Notebook 05 (interest rate shock, income reduction, employment stress). Results: +1.14% combined PD increase.'},
+         'CREW Status': 'Compliant -- 3 stress scenarios implemented in Notebook 05 (interest rate shock, income reduction, employment stress). Results: +1.14% combined PD increase.'},
         {'FINMA Requirement': 'Board & Senior Management Reporting',
          'Principle': 'Regular model risk reporting to governance bodies',
-         'CREWS Status': 'Executive summary and AI agent reports designed for senior management consumption. Dashboard provides real-time portfolio view.'},
+         'CREW Status': 'Executive summary and AI agent reports designed for senior management consumption. Dashboard provides real-time portfolio view.'},
     ])
     st.table(finma_data)
 
     st.markdown(
         "**Note:** FINMA Circular 2017/1 is supplemented by FINMA Guidance 03/2024 on "
         "artificial intelligence, which extends model risk management requirements to "
-        "AI/ML models specifically. CREWS's dual explainability approach (SHAP + LIME) "
+        "AI/ML models specifically. CREW's dual explainability approach (SHAP + LIME) "
         "aligns with FINMA's emphasis on model interpretability for AI systems."
     )
 
@@ -1590,19 +1590,19 @@ must comply with the following requirements:
     ndsg_data = pd.DataFrame([
         {'nDSG Provision': 'Art. 21 -- Automated Individual Decisions',
          'Requirement': 'Data subjects have the right to be informed when a decision is based solely on automated processing that significantly affects them, and to request human review',
-         'CREWS Alignment': 'SHAP waterfall plots provide per-decision explanations. Business threshold allows human override. Right-to-Explanation capability (Section 5) generates adverse action notices.'},
+         'CREW Alignment': 'SHAP waterfall plots provide per-decision explanations. Business threshold allows human override. Right-to-Explanation capability (Section 5) generates adverse action notices.'},
         {'nDSG Provision': 'Art. 25-27 -- Right to Information',
          'Requirement': 'Data subjects can request information about what personal data is processed, for what purpose, and the logic behind automated decisions',
-         'CREWS Alignment': 'Model card documents all input features, purpose, and methodology. SHAP + LIME provide dual-method logic explanations. Feature names mapped to plain-English labels.'},
+         'CREW Alignment': 'Model card documents all input features, purpose, and methodology. SHAP + LIME provide dual-method logic explanations. Feature names mapped to plain-English labels.'},
         {'nDSG Provision': 'Art. 22 -- Data Protection Impact Assessment (DPIA)',
          'Requirement': 'Required when processing poses a high risk to personality or fundamental rights. Credit scoring is explicitly high-risk.',
-         'CREWS Alignment': 'Fair lending analysis (Section 2) identifies protected attributes. CODE_GENDER flagged as HIGH risk. DPIA documentation recommended before production deployment.'},
+         'CREW Alignment': 'Fair lending analysis (Section 2) identifies protected attributes. CODE_GENDER flagged as HIGH risk. DPIA documentation recommended before production deployment.'},
         {'nDSG Provision': 'Art. 6 -- Profiling',
          'Requirement': 'High-risk profiling (automated assessment of creditworthiness) requires explicit consent or legal basis. Must be transparent and proportionate.',
-         'CREWS Alignment': 'CREWS performs high-risk profiling (credit scoring). Requires explicit consent or contractual necessity as legal basis. Feature selection documented with proportionality rationale.'},
+         'CREW Alignment': 'CREW performs high-risk profiling (credit scoring). Requires explicit consent or contractual necessity as legal basis. Feature selection documented with proportionality rationale.'},
         {'nDSG Provision': 'Art. 8 -- Data Security',
          'Requirement': 'Appropriate technical and organizational measures to protect personal data',
-         'CREWS Alignment': 'Model artifacts stored locally. API keys in .env (not committed). .gitignore excludes sensitive files. Production deployment would require encryption at rest and in transit.'},
+         'CREW Alignment': 'Model artifacts stored locally. API keys in .env (not committed). .gitignore excludes sensitive files. Production deployment would require encryption at rest and in transit.'},
     ])
     st.table(ndsg_data)
 
@@ -1613,7 +1613,7 @@ must comply with the following requirements:
 - Cross-border data transfer requires adequate protection level (Switzerland recognized by EU, but reverse adequacy requires assessment per Art. 16 nDSG)
 - Penalties: up to CHF 250,000 for individuals (not organizations, unlike GDPR's percentage-of-revenue fines)
 
-**Recommendation:** Before deploying CREWS in a Swiss banking context, conduct a formal DPIA
+**Recommendation:** Before deploying CREW in a Swiss banking context, conduct a formal DPIA
 per Art. 22 nDSG and obtain legal review of the processing legal basis under Art. 6.
 """)
 
