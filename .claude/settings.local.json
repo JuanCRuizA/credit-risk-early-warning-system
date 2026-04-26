@@ -24,7 +24,8 @@
       "Read(//mnt/skills/public/docx/**)",
       "Bash(xargs wc:*)",
       "Bash(du -sh /c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/*)",
-      "Read(//c/Users/carlo/.claude/projects/c--Users-carlo-Documents-4-DS-credit-risk-early-warning-system/memory/**)"
+      "Read(//c/Users/carlo/.claude/projects/c--Users-carlo-Documents-4-DS-credit-risk-early-warning-system/memory/**)",
+      "Bash(git -C \"c:/Users/carlo/Documents/4.DS/credit-risk-early-warning-system\" diff docs/log_files/issues-solutions.md)"
     ],
     "additionalDirectories": [
       "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs",

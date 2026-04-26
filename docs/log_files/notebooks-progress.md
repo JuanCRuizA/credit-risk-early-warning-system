@@ -483,5 +483,6 @@
 - **2026-04-11 Sprint B**: Dynamic Tab 4 (AI Agent) from agent_output_latest.json; LIME Validation section in Tab 3 (SHAP); live SHAP attribution in sidebar (DECISION-026); audit log + model card download buttons in Tab 5; adverse action notice expander; Tab order swapped (SHAP → Tab 3, AI Agent → Tab 4 — DECISION-025)
 - **2026-04-11 Sprint C**: "About & Methods" renamed to "Technical Architecture" with full pipeline description
 - **2026-04-11 Bug fixes**: pandas `applymap` → `.map()` (ISSUE-015); `encoding='utf-8'` on all text file reads (ISSUE-016); interaction features computed in risk calculator (ISSUE-017)
+- **2026-04-26 Cost model alignment (DECISION-027, ISSUE-019)**: Aligned all cost parameters and net profit formula with NB03 §6.1-6.2: (1) `AVG_LOAN`: `.mean()` → `.median()`; (2) `LGD`: 0.45 → 0.60; (3) `FP_COST`: $50 flat → `AVG_LOAN * 0.10` (~$51,206, foregone loan profit); (4) formula: `net_savings = no_model_cost - fn*FN - fp*FP` → `net_profit = tn*FP - fn*FN - fp*FP` (includes TN revenue). KPI tile renamed "Expected Net Profit"; delta shows +$141M vs no-model. Downstream labels updated: "False Alarm Cost" → "Foregone Loan Profit"; Cost-Benefit table "Total Cost" → "Expected Net Profit". Validation: FN/FP ratio = 6.0x; 0.79 ($1.511B) now correctly dominates 0.51 ($970M)
 
 ---

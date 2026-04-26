@@ -34,6 +34,7 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-024] Dynamic Agent Output Loading from JSON in Dashboard Tab 4
 - [DECISION-025] Tab Reordering — SHAP Before AI Agent
 - [DECISION-026] Live SHAP Attribution in Sidebar Risk Calculator
+- [DECISION-027] Align app.py Cost Model and Formula with NB03 Profit-Maximization Framework
 
 ### Pending Review
 - None
@@ -726,5 +727,31 @@ Document key technical decisions, rationale, and alternatives considered during 
 - SHAP values computed on the exact same `X_calc` used for prediction — guaranteed consistency
 - If SHAP features/model mismatch occurs (e.g., model retrained), the `except` block catches it gracefully
 **Related:** `app.py` (sidebar risk calculator section), DECISION-009, ISSUE-017
+
+---
+
+### [DECISION-027] Align app.py Cost Model and Formula with NB03 Profit-Maximization Framework
+**Date:** 2026-04-26
+**Status:** Implemented
+**Context:** app.py was built independently of NB03 and inherited three wrong cost parameters: LGD=0.45 (vs 0.60 in NB03), FP_COST=$50 flat review fee (vs foregone loan profit in NB03), and AVG_LOAN computed with mean() (vs median() in NB03). Additionally, the net savings formula excluded TN profit revenue, which is the decisive factor that makes 0.79 the profit-maximizing threshold. The result was the dashboard showing threshold 0.51 as economically superior to 0.79, directly contradicting the NB03 analysis. See ISSUE-019.
+**Decision:** Align all cost parameters and the net profit formula in app.py with NB03 §6.1-6.2 (Verbraken et al. 2014 framework). Rename the KPI metric from "Net Savings vs No Model" to "Expected Net Profit" to reflect the new semantics.
+**Rationale:**
+- **Single source of truth**: NB03 is the canonical cost model. The business threshold (0.79) was derived there; the dashboard must use the same framework or the threshold is indefensible
+- **LGD=0.60**: Basel IRB Foundation approach for unsecured consumer credit — the correct LGD for this portfolio. 0.45 is typical for secured/mortgage lending
+- **FP cost = foregone loan profit**: When a good customer is flagged above the threshold and rejected, the bank loses the interest income on that loan, not just a $50 review cost. At $51K per customer, this is the dominant economic force that drives the optimal threshold high
+- **AVG_LOAN = median()**: Median ($512K) is robust to the right-skewed loan amount distribution; mean() inflates the base inconsistently with NB03
+- **NB03 formula (tn*FP - fn*FN - fp*FP)**: Counts TN profits (revenue from correctly approved good loans) in addition to default losses and opportunity costs. At 0.79: 54,811 correctly approved good loans x $51K = $2.81B in revenue. At 0.51: only 42,860 x $51K = $2.20B. The $612M difference is what makes 0.79 the optimum
+- **"Expected Net Profit" label**: More precise and regulatory-appropriate than "Net Savings vs No Model." "Expected" signals a probabilistic, model-derived figure (consistent with Expected Credit Loss vocabulary). The delta `+$141M vs no-model` quantifies the incremental economic value the model adds over a naive approve-all policy
+**Alternatives Considered:**
+- Keep net_savings formula, only fix parameters: Insufficient. With corrected parameters and the old formula, 0.51 still wins by $70M because TN profits are still excluded
+- Keep "Net Savings vs No Model" label: Incorrect after the formula change — the metric is no longer a savings-vs-baseline figure, it is a total portfolio profit figure
+- Show "vs approve-all" and "vs reject-all" deltas: More informative but adds UI complexity without proportional benefit for the demo
+**Consequences:**
+- FN/FP ratio = exactly 6.0x (LGD/PROFIT_RATE = 0.60/0.10), matching NB03's documented 6:1 cost asymmetry
+- Expected Net Profit: $1.511B at 0.79 vs $970M at 0.51 — 0.79 wins by $541M
+- KPI delta: +$141M vs no-model — the auditable, interview-ready answer to "what does the model actually add?"
+- "False Alarm Cost" panel renamed "Foregone Loan Profit"; Cost-Benefit table column renamed "Expected Net Profit"
+- Sidebar cost structure note updated to describe FP cost as foregone loan profit, not a review fee
+- Script for demo subpart 4.5 updated: narrative now references the NB03 profit analysis and the TN revenue mechanism
 
 ---
