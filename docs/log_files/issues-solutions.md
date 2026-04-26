@@ -245,6 +245,25 @@ In Notebook 02 (Feature Engineering), a binary flag `FLAG_UNEMPLOYED` was create
 
 ---
 
+### [ISSUE-019] app.py Cost Model Inconsistent with NB03 Profit-Maximization Framework
+**Date:** 2026-04-26
+**Status:** Resolved
+**Severity:** Medium
+**Problem:** The Streamlit dashboard showed threshold 0.51 (statistical optimum) with higher "Net Savings" than threshold 0.79 (business optimum), directly contradicting the profit-maximization analysis in NB03. At 0.51 the app displayed $875M vs $279M at 0.79, making the business threshold look economically inferior.
+**Root Cause:** Two compounding errors introduced when app.py was built independently of NB03:
+1. Wrong parameters: `LGD=0.45` (should be 0.60), `FP_COST=50.0` flat review fee (should be `AVG_LOAN * 0.10`, the foregone loan profit), and `AVG_LOAN` computed with `.mean()` (should be `.median()` per NB03 §6.1).
+2. Wrong formula: `net_savings = total_defaults * FN_COST - fn * FN_COST - fp * FP_COST` counts only defaults caught minus false alarm costs, omitting the profit from correctly approved good customers (TN). NB03's formula is `net_profit = tn * FP_COST - fn * FN_COST - fp * FP_COST`. With a flat $50 FP cost, the omission was invisible; with the correct $51K FP cost it is decisive (54,811 good loans correctly approved at 0.79 vs 42,860 at 0.51 = $612M difference).
+**Solution:** Four changes to `app.py` (cost block and downstream displays):
+1. `AVG_LOAN`: `.mean()` → `.median()`
+2. `LGD`: `0.45` → `0.60`
+3. `FP_COST`: `50.0` → `AVG_LOAN * PROFIT_RATE` (PROFIT_RATE=0.10), yielding ~$51,206 (foregone loan profit per rejected good customer)
+4. Formula + label: `net_savings = no_model_cost - total_cost` → `net_profit = tn * FP_COST - fn * FN_COST - fp * FP_COST`; KPI tile renamed "Expected Net Profit"; delta shows incremental value over no-model baseline (+$141M at 0.79).
+Downstream labels updated consistently: "False Alarm Cost" → "Foregone Loan Profit" in Cost Analysis panel; "Total Cost" → "Expected Net Profit" in Cost-Benefit table; sidebar cost structure note updated.
+Validation: FN/FP ratio = 6.0x; Expected Net Profit at 0.79 = $1.511B; at 0.51 = $970M. 0.79 wins by $541M.
+**Prevention:** When deploying a dashboard from a notebook, trace all cost parameters directly to the notebook source. Cross-check by computing the metric at both the statistical and business threshold and confirming the business threshold dominates. See DECISION-027.
+
+---
+
 ### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
 **Date:** 2026-03-29
 **Status:** Resolved

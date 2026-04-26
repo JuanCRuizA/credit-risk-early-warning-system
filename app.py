@@ -147,11 +147,13 @@ try:
     y_test = df_test['TARGET'].values
     fraud_scores = df_test['predicted_pd'].values
 
-    # Cost assumptions for credit risk
-    AVG_LOAN = df_test['AMT_CREDIT'].mean() if 'AMT_CREDIT' in df_test.columns else 500000
-    LGD = 0.45  # Loss Given Default (Basel IRB foundation, unsecured consumer)
-    FN_COST = AVG_LOAN * LGD  # Cost of missing a default
-    FP_COST = 50.0  # Manual review cost
+    # Cost assumptions — aligned with NB03 §6.1 profit-maximization framework
+    AVG_LOAN = df_test['AMT_CREDIT'].median() if 'AMT_CREDIT' in df_test.columns else 500000
+    LGD = 0.60          # Loss Given Default (Basel IRB foundation, unsecured consumer; NB03 §6.1)
+    PROFIT_RATE = 0.10  # Net interest margin after cost of funds (NB03 §6.1)
+    FN_COST = AVG_LOAN * LGD           # Cost of approving a defaulter (FN)
+    FP_COST = AVG_LOAN * PROFIT_RATE   # Lost profit from rejecting a good customer (FP)
+    # FN_COST / FP_COST ratio = LGD / PROFIT_RATE = 0.60 / 0.10 = 6.0x
 
 except Exception as e:
     st.error(f"Failed to load model or data: {e}")
@@ -360,7 +362,7 @@ with st.sidebar:
             f"Gini {mc_perf.get('gini', 0.5556):.4f} · "
             f"Brier {mc_perf.get('brier_score', 0.0668):.4f}\n"
             f"- **Calibration:** Isotonic Regression (post-hoc, preserves AUC, required for IFRS 9/Basel III)\n"
-            f"- **Cost structure:** ${FN_COST:,.0f} FN / ${FP_COST:.0f} FP\n"
+            f"- **Cost structure:** ${FN_COST:,.0f} missed default (FN) / ${FP_COST:,.0f} foregone loan profit (FP)\n"
             "- **Explainability:** SHAP TreeExplainer + LIME (dual-method, SR 11-7 gold standard)\n"
             "- **Agent:** Claude Sonnet 4 · 4-phase protocol · 5 custom tools · automated audit trail\n"
             "- **Compliance:** SR 11-7, Basel III/IV, IFRS 9, ECOA/Reg B, EU AI Act, FINMA 2017/1, FINMA 2023/1, Swiss nDSG"
@@ -423,15 +425,16 @@ with tab1:
     missed_cost = fn * FN_COST
     review_cost = fp * FP_COST
     total_cost = missed_cost + review_cost
-    no_model_cost = total_defaults * FN_COST
-    net_savings = no_model_cost - total_cost
+    # NB03 §6.2 formula: tn earns loan profit, fn costs LGD loss, fp costs foregone profit
+    net_profit = tn * FP_COST - fn * FN_COST - fp * FP_COST
+    no_model_profit = (total_loans - total_defaults) * FP_COST - total_defaults * FN_COST
 
     # KPIs
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("Total Loans (Test Set)", f"{total_loans:,}", f"{total_defaults:,} defaults ({y_test.mean():.1%})")
     k2.metric("High-Risk Flagged", f"{y_pred.sum():,}", f"{y_pred.sum()/total_loans:.1%} of portfolio")
     k3.metric("Defaults Detected", f"{tp:,} / {total_defaults:,}", f"{recall:.1%} recall")
-    k4.metric("Net Savings vs No Model", f"${net_savings:,.0f}", f"${no_model_cost:,.0f} baseline")
+    k4.metric("Expected Net Profit", f"${net_profit:,.0f}", f"+${net_profit - no_model_profit:,.0f} vs no-model")
 
     st.markdown("---")
 
@@ -581,7 +584,7 @@ with tab1:
         st.subheader("Cost Analysis")
         c1, c2 = st.columns(2)
         c1.metric("Missed Default Cost", f"${missed_cost:,.0f}", f"{fn:,} missed x ${FN_COST:,.0f}")
-        c2.metric("False Alarm Cost", f"${review_cost:,.0f}", f"{fp:,} reviews x ${FP_COST:.0f}")
+        c2.metric("Foregone Loan Profit", f"${review_cost:,.0f}", f"{fp:,} good loans x ${FP_COST:,.0f}")
 
         st.markdown("")
         perf_df = pd.DataFrame({
@@ -740,9 +743,10 @@ with tab2:
         t_tp = int(((y_test == 1) & (yp == 1)).sum())
         t_fp = int(((y_test == 0) & (yp == 1)).sum())
         t_fn = int(((y_test == 1) & (yp == 0)).sum())
+        t_tn = int(((y_test == 0) & (yp == 0)).sum())
         t_rec = t_tp / total_defaults if total_defaults > 0 else 0
         t_pre = t_tp / (t_tp + t_fp) if (t_tp + t_fp) > 0 else 0
-        t_cost = t_fn * FN_COST + t_fp * FP_COST
+        t_net_profit = t_tn * FP_COST - t_fn * FN_COST - t_fp * FP_COST
         marker = " *" if abs(t - risk_threshold) < 0.005 else ""
         rows.append({
             'Threshold': f"{t:.2f}{marker}",
@@ -751,7 +755,7 @@ with tab2:
             'Defaults Caught': f"{t_tp:,}",
             'False Positives': f"{t_fp:,}",
             'Missed Defaults': f"{t_fn:,}",
-            'Total Cost': f"${t_cost:,.0f}",
+            'Expected Net Profit': f"${t_net_profit:,.0f}",
         })
     st.caption("* = current threshold")
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
