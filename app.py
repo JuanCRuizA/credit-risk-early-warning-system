@@ -207,7 +207,7 @@ FOOTER_HTML = """
 
 
 def render_footer():
-    st.markdown("---")
+#    st.markdown("---")
     st.markdown(FOOTER_HTML, unsafe_allow_html=True)
 
 
@@ -714,18 +714,6 @@ with tab2:
             ),
             use_container_width=True,
         )
-
-    st.markdown("---")
-
-    # Feature Importance
-    st.subheader("Feature Importance (SHAP)")
-    shap_imp = REPORTS_PATH / 'shap_global_importance.png'
-    if shap_imp.exists():
-        st.image(Image.open(shap_imp), use_container_width=True)
-    else:
-        fi_img = REPORTS_PATH / 'feature_importance.png'
-        if fi_img.exists():
-            st.image(Image.open(fi_img), use_container_width=True)
 
     st.markdown("---")
 
