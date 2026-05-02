@@ -694,16 +694,6 @@ with tab2:
         if cost_img.exists():
             st.image(Image.open(cost_img), caption='Profit vs Threshold', use_container_width=True)
 
-    img_l2, img_r2 = st.columns(2)
-    with img_l2:
-        cal_img = REPORTS_PATH / 'calibration_curve.png'
-        if cal_img.exists():
-            st.image(Image.open(cal_img), caption='Calibration Curve', use_container_width=True)
-    with img_r2:
-        thresh_img = REPORTS_PATH / 'threshold_analysis.png'
-        if thresh_img.exists():
-            st.image(Image.open(thresh_img), caption='Threshold Analysis', use_container_width=True)
-
     cal_ba_img = REPORTS_PATH / 'calibration_before_after.png'
     if cal_ba_img.exists():
         st.image(
