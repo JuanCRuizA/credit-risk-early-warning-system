@@ -25,7 +25,8 @@
       "Bash(xargs wc:*)",
       "Bash(du -sh /c/Users/carlo/Documents/4.DS/credit-risk-early-warning-system/*)",
       "Read(//c/Users/carlo/.claude/projects/c--Users-carlo-Documents-4-DS-credit-risk-early-warning-system/memory/**)",
-      "Bash(git -C \"c:/Users/carlo/Documents/4.DS/credit-risk-early-warning-system\" diff docs/log_files/issues-solutions.md)"
+      "Bash(git -C \"c:/Users/carlo/Documents/4.DS/credit-risk-early-warning-system\" diff docs/log_files/issues-solutions.md)",
+      "PowerShell(Write-Output $_)"
     ],
     "additionalDirectories": [
       "c:\\Users\\carlo\\Documents\\4.DS\\credit-risk-early-warning-system\\docs",

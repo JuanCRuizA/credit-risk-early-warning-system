@@ -147,7 +147,7 @@ try:
     y_test = df_test['TARGET'].values
     fraud_scores = df_test['predicted_pd'].values
 
-    # Cost assumptions — aligned with NB03 §6.1 profit-maximization framework
+    # Cost assumptions, aligned with NB03 §6.1 profit-maximization framework
     AVG_LOAN = df_test['AMT_CREDIT'].median() if 'AMT_CREDIT' in df_test.columns else 500000
     LGD = 0.60          # Loss Given Default (Basel IRB foundation, unsecured consumer; NB03 §6.1)
     PROFIT_RATE = 0.10  # Net interest margin after cost of funds (NB03 §6.1)
@@ -830,98 +830,28 @@ with tab3:
         "Each case shows the SHAP waterfall and a plain-English explanation."
     )
 
-    cases = {
-        "Case 1: True Positive -- High-Risk Default Correctly Flagged": {
-            "score": 0.85, "actual": "DEFAULT", "decision": "FLAGGED",
-            "waterfall_file": "shap_waterfall_true_positive.png",
-            "features": {
-                "External Score (Combined)": "0.12 (very low)",
-                "Annuity-to-Credit Ratio": "0.068 (high burden)",
-                "Employment": "2.1 years (short tenure)",
-                "Age": "28 years (younger borrower)",
-                "Loan Amount": "$320,000",
-                "Previous Refusal Rate": "40%",
-            },
-            "explanation": (
-                "This loan was correctly identified as high-risk. The dominant "
-                "driver was the very low external credit score (SHAP pushing strongly "
-                "toward default), indicating poor credit history from bureau data. "
-                "Short employment tenure and young age reinforced the risk signal. "
-                "The high previous application refusal rate (40%) suggests a pattern "
-                "of credit difficulties. The model correctly flagged this borrower, "
-                "who subsequently defaulted."
-            ),
-            "drivers_title": "Key Risk Drivers",
-            "drivers": [
-                "External credit score 0.12 -- far below population median of 0.51",
-                "Previous refusal rate 40% -- history of rejected applications",
-                "Employment 2.1 years -- below stability threshold",
-                "Age 28 -- younger borrowers carry statistically higher risk",
-            ],
-        },
-        "Case 2: False Positive -- Good Borrower Incorrectly Flagged": {
-            "score": 0.62, "actual": "NON-DEFAULT", "decision": "FLAGGED",
-            "waterfall_file": "shap_waterfall_false_positive.png",
-            "features": {
-                "External Score (Combined)": "0.35 (below average)",
-                "Annuity-to-Credit Ratio": "0.055",
-                "Employment": "8.5 years (stable)",
-                "Age": "42 years",
-                "Loan Amount": "$450,000 (large)",
-                "Previous Refusal Rate": "0%",
-            },
-            "explanation": (
-                "This borrower was incorrectly flagged as high-risk despite "
-                "repaying the loan successfully. The below-average external score "
-                "(0.35) was the primary false signal -- while below the population "
-                "median, this borrower had stable employment (8.5 years) and zero "
-                "previous refusals. The large loan amount ($450,000) contributed "
-                "to the elevated score. This case illustrates a model limitation: "
-                "external scores dominate the prediction, occasionally overriding "
-                "positive behavioral signals."
-            ),
-            "drivers_title": "Key Factors in False Alert",
-            "drivers": [
-                "External score 0.35 -- below average but not critically low",
-                "Large loan amount $450K -- size alone increases perceived risk",
-                "Stable employment 8.5 years -- positive signal underweighted",
-            ],
-        },
-        "Case 3: False Negative -- Missed Default": {
-            "score": 0.38, "actual": "DEFAULT", "decision": "APPROVED",
-            "waterfall_file": "shap_waterfall_false_negative.png",
-            "features": {
-                "External Score (Combined)": "0.55 (above average)",
-                "Annuity-to-Credit Ratio": "0.042 (moderate)",
-                "Employment": "5.3 years",
-                "Age": "45 years",
-                "Loan Amount": "$180,000",
-                "Previous Refusal Rate": "0%",
-            },
-            "explanation": (
-                "The model failed to detect this default because all features "
-                "appeared healthy. The external credit score (0.55) was above "
-                "average, employment was stable, and the borrower had no previous "
-                "refusals. This represents a fundamental model limitation: the "
-                "default was driven by factors not captured in the feature set "
-                "(e.g., sudden income loss, health event, or macroeconomic shock). "
-                "This case motivates incorporating macroeconomic indicators and "
-                "real-time behavioral data in future model versions."
-            ),
-            "drivers_title": "Key Factors in Missed Detection",
-            "drivers": [
-                "External score 0.55 -- above average, suppressed risk signal",
-                "Zero previous refusals -- clean credit history masked emerging risk",
-                "Moderate loan amount -- within normal range, no size-based signal",
-            ],
-            "improvement": (
-                "Incorporate forward-looking macroeconomic indicators (unemployment "
-                "rate, GDP growth, interest rate changes) and real-time behavioral "
-                "signals (payment delays, utilization spikes) to detect defaults "
-                "driven by external shocks rather than static borrower characteristics."
-            ),
-        },
-    }
+    # Load case studies from notebook 04 export (single source of truth)
+    case_studies_path = REPORTS_PATH / 'case_studies.json'
+    cases = {}
+    if case_studies_path.exists():
+        with open(case_studies_path, encoding='utf-8') as _f:
+            cases_raw = json.load(_f)
+        _label_map = [
+            ("Case 1: True Positive - High-Risk Default Correctly Flagged",   "true_positive"),
+            ("Case 2: False Positive - Good Borrower Incorrectly Flagged",    "false_positive"),
+            ("Case 3: False Negative - Missed Default",                        "false_negative"),
+        ]
+        for _display, _key in _label_map:
+            if _key in cases_raw and cases_raw[_key] is not None:
+                cases[_display] = cases_raw[_key]
+    else:
+        st.warning(
+            f"Case studies file not found at {case_studies_path}. "
+            "Run notebook 04 (cells 3.1 -> 3.6) to regenerate."
+        )
+
+    if not cases:
+        st.stop()
 
     selected = st.selectbox("Select a case study:", list(cases.keys()))
     case = cases[selected]
@@ -944,10 +874,10 @@ with tab3:
         for k, v in feat_items[mid:]:
             st.markdown(f"**{k}:** {v}")
 
-    st.subheader("SHAP Waterfall -- Why the Model Made This Decision")
+    st.subheader("SHAP Waterfall. Why the Model Made This Decision")
     wf_path = REPORTS_PATH / case['waterfall_file']
     if wf_path.exists():
-        st.image(Image.open(wf_path), caption=f"SHAP waterfall: {selected.split(' --')[0]}",
+        st.image(Image.open(wf_path), caption=f"SHAP waterfall: {selected.split(' - ')[0]}",
                  use_container_width=True)
     else:
         st.info(f"Waterfall plot ({case['waterfall_file']}) not found. Run notebook 04.")
@@ -1073,7 +1003,7 @@ with tab4:
                   f"{pb.get('portfolio_pct', 0):.1f}% of portfolio")
         m2.metric("Avg PD (High-Risk Cohort)", f"{pb.get('avg_pd', 0):.1%}")
         m3.metric("Watch List Entries", f"{pd_phase.get('watch_list_entries', 0):,}")
-        m4.metric("Verification", agent_output.get('verification_status', '—'))
+        m4.metric("Verification", agent_output.get('verification_status', 'N/A'))
     else:
         st.info("Run Notebook 05 to populate agent findings.")
 
@@ -1359,16 +1289,16 @@ with tab5:
 
 where:
 - **PD** (Probability of Default): XGBoost model output, calibrated on 307,511 historical loans
-- **LGD** (Loss Given Default): 45% -- Basel IRB foundation approach for unsecured consumer lending
+- **LGD** (Loss Given Default): 45%, Basel IRB foundation approach for unsecured consumer lending
 - **EAD** (Exposure at Default): Outstanding loan amount (AMT_CREDIT)
 
 **Staging Criteria:**
 
 | Stage | Condition | ECL Horizon | Trigger |
 |-------|-----------|-------------|---------|
-| Stage 1 -- Performing | PD < 10% | 12-month ECL | Initial recognition, no SICR |
-| Stage 2 -- Underperforming | 10% <= PD < business threshold | Lifetime ECL | Significant Increase in Credit Risk (SICR) |
-| Stage 3 -- Non-Performing | PD >= business threshold | Lifetime ECL (impaired) | Credit-impaired, objective evidence of loss |
+| Stage 1 - Performing | PD < 10% | 12-month ECL | Initial recognition, no SICR |
+| Stage 2 - Underperforming | 10% <= PD < business threshold | Lifetime ECL | Significant Increase in Credit Risk (SICR) |
+| Stage 3 - Non-Performing | PD >= business threshold | Lifetime ECL (impaired) | Credit-impaired, objective evidence of loss |
 
 **Significant Increase in Credit Risk (SICR) Definition:**
 - PD increases from below 10% at origination to above 10% at reporting date
@@ -1397,14 +1327,14 @@ Applicants whose loans are denied or flagged for review may request an explanati
 SHAP values provide a complete, auditable explanation at the individual loan level.
 
 **Applicable Frameworks:**
-- **ECOA / Reg B** -- US: adverse action notices must cite specific reasons for denial
-- **GDPR Art. 22** -- EU: right to explanation for automated decisions with legal effects
-- **IFRS 9** -- Staging decisions must be explainable and auditable
+- **ECOA / Reg B**, US: adverse action notices must cite specific reasons for denial
+- **GDPR Art. 22**, EU: right to explanation for automated decisions with legal effects
+- **IFRS 9**, staging decisions must be explainable and auditable
 
 **For any loan application, the system can generate:**
-1. **Feature-level attribution** -- which factors contributed to the decision
-2. **Quantified contribution** -- how much each factor affected the PD score
-3. **Comparison to baseline** -- score relative to average default probability (8.07%)
+1. **Feature-level attribution**, showing which factors contributed to the decision
+2. **Quantified contribution**, measuring how much each factor affected the PD score
+3. **Comparison to baseline**, the score relative to average default probability (8.07%)
 
 **Adverse Action Notice Generation:**
 1. Model scores the application (PD output)
@@ -1481,25 +1411,25 @@ This classification triggers mandatory requirements under Title III, Chapter 2 (
 """)
 
     eu_ai_data = pd.DataFrame([
-        {'Requirement': 'Art. 9 -- Risk Management System',
+        {'Requirement': 'Art. 9 - Risk Management System',
          'Status': 'PARTIAL',
          'CREW Implementation': 'SHAP+LIME dual explainability, business threshold optimization, stress testing in Notebook 05. Residual risk: model drift monitoring is designed but not yet automated in production.'},
-        {'Requirement': 'Art. 10 -- Data Governance',
+        {'Requirement': 'Art. 10 - Data Governance',
          'Status': 'COMPLIANT',
          'CREW Implementation': 'Home Credit dataset with documented provenance. EDA (Notebook 01) covers data quality, missing value strategy, outlier analysis. Feature engineering documented in Notebook 02.'},
-        {'Requirement': 'Art. 11 -- Technical Documentation',
+        {'Requirement': 'Art. 11 - Technical Documentation',
          'Status': 'COMPLIANT',
          'CREW Implementation': 'Model card (reports/model_card.txt), technical decisions log, 5 notebooks with full methodology. SHAP feature importance archived.'},
-        {'Requirement': 'Art. 12 -- Record-Keeping',
+        {'Requirement': 'Art. 12 - Record-Keeping',
          'Status': 'COMPLIANT',
          'CREW Implementation': 'Audit trail logging (audit_trail.log) with session IDs, timestamps, and action summaries. SHAP values stored per decision.'},
-        {'Requirement': 'Art. 13 -- Transparency',
+        {'Requirement': 'Art. 13 - Transparency',
          'Status': 'COMPLIANT',
          'CREW Implementation': 'SHAP waterfall plots for individual decisions. LIME provides independent model-agnostic validation. Adverse action notice generation capability.'},
-        {'Requirement': 'Art. 14 -- Human Oversight',
+        {'Requirement': 'Art. 14 - Human Oversight',
          'Status': 'PARTIAL',
          'CREW Implementation': 'Dashboard enables human review of flagged loans. Business threshold allows manual override. Full automation not implemented (human-in-the-loop by design).'},
-        {'Requirement': 'Art. 15 -- Accuracy & Robustness',
+        {'Requirement': 'Art. 15 - Accuracy & Robustness',
          'Status': 'COMPLIANT',
          'CREW Implementation': 'AUC 0.7793, 5-fold CV stability (std 0.0037), calibration curve analysis, stress testing under 3 macroeconomic scenarios.'},
     ])
@@ -1515,11 +1445,11 @@ This classification triggers mandatory requirements under Title III, Chapter 2 (
     st.markdown("---")
 
     # Section 8: FINMA Circular 2017/1
-    st.subheader("8. FINMA Circular 2017/1 -- Model Risk Management (Switzerland)", anchor="finma-circular")
+    st.subheader("8. FINMA Circular 2017/1 - Model Risk Management (Switzerland)", anchor="finma-circular")
 
     st.markdown("""
 **Applicability:** FINMA (Swiss Financial Market Supervisory Authority) Circular 2017/1
-"Corporate Governance -- Banks" establishes model risk management requirements for
+"Corporate Governance - Banks" establishes model risk management requirements for
 banks operating in Switzerland. While CREW is a portfolio project, its design aligns
 with FINMA expectations for credit risk models used in supervised institutions.
 
@@ -1532,16 +1462,16 @@ with FINMA expectations for credit risk models used in supervised institutions.
          'CREW Status': 'Model Governance section (Section 3) classifies CREW as Tier 2 (Material). Model identification includes name, version, type, purpose, and date.'},
         {'FINMA Requirement': 'Independent Model Validation',
          'Principle': 'Models must be validated by a function independent from development',
-         'CREW Status': 'Pending -- listed in Production Readiness Checklist. 5-fold cross-validation and holdout test set provide quantitative validation. Second-line review recommended.'},
+         'CREW Status': 'Pending. Listed in Production Readiness Checklist. 5-fold cross-validation and holdout test set provide quantitative validation. Second-line review recommended.'},
         {'FINMA Requirement': 'Model Documentation',
          'Principle': 'Complete documentation of methodology, assumptions, and limitations',
-         'CREW Status': 'Compliant -- model card, technical decisions log (13 decisions), 5 documented notebooks, SHAP analysis with business interpretation.'},
+         'CREW Status': 'Compliant. Model card, technical decisions log (13 decisions), 5 documented notebooks, SHAP analysis with business interpretation.'},
         {'FINMA Requirement': 'Ongoing Monitoring',
          'Principle': 'Regular performance monitoring and backtesting',
          'CREW Status': 'Monitoring schedule defined (daily/weekly/monthly/quarterly/annual). PSI drift detection designed in AI agent. Automated revalidation pending.'},
         {'FINMA Requirement': 'Stress Testing',
          'Principle': 'Models must be stress tested under adverse scenarios',
-         'CREW Status': 'Compliant -- 3 stress scenarios implemented in Notebook 05 (interest rate shock, income reduction, employment stress). Results: +1.14% combined PD increase.'},
+         'CREW Status': 'Compliant. 3 stress scenarios implemented in Notebook 05 (interest rate shock, income reduction, employment stress). Results: +1.14% combined PD increase.'},
         {'FINMA Requirement': 'Board & Senior Management Reporting',
          'Principle': 'Regular model risk reporting to governance bodies',
          'CREW Status': 'Executive summary and AI agent reports designed for senior management consumption. Dashboard provides real-time portfolio view.'},
@@ -1559,7 +1489,7 @@ with FINMA expectations for credit risk models used in supervised institutions.
     st.markdown("---")
 
     # Section 9: Swiss nDSG (Data Protection)
-    st.subheader("9. Swiss nDSG -- Federal Act on Data Protection", anchor="swiss-ndsg")
+    st.subheader("9. Swiss nDSG - Federal Act on Data Protection", anchor="swiss-ndsg")
 
     st.markdown("""
 **Effective Date:** September 1, 2023 (revised Swiss Federal Act on Data Protection, nDSG/nFADP)
@@ -1570,19 +1500,19 @@ must comply with the following requirements:
 """)
 
     ndsg_data = pd.DataFrame([
-        {'nDSG Provision': 'Art. 21 -- Automated Individual Decisions',
+        {'nDSG Provision': 'Art. 21 - Automated Individual Decisions',
          'Requirement': 'Data subjects have the right to be informed when a decision is based solely on automated processing that significantly affects them, and to request human review',
          'CREW Alignment': 'SHAP waterfall plots provide per-decision explanations. Business threshold allows human override. Right-to-Explanation capability (Section 5) generates adverse action notices.'},
-        {'nDSG Provision': 'Art. 25-27 -- Right to Information',
+        {'nDSG Provision': 'Art. 25-27 - Right to Information',
          'Requirement': 'Data subjects can request information about what personal data is processed, for what purpose, and the logic behind automated decisions',
          'CREW Alignment': 'Model card documents all input features, purpose, and methodology. SHAP + LIME provide dual-method logic explanations. Feature names mapped to plain-English labels.'},
-        {'nDSG Provision': 'Art. 22 -- Data Protection Impact Assessment (DPIA)',
+        {'nDSG Provision': 'Art. 22 - Data Protection Impact Assessment (DPIA)',
          'Requirement': 'Required when processing poses a high risk to personality or fundamental rights. Credit scoring is explicitly high-risk.',
          'CREW Alignment': 'Fair lending analysis (Section 2) identifies protected attributes. CODE_GENDER flagged as HIGH risk. DPIA documentation recommended before production deployment.'},
-        {'nDSG Provision': 'Art. 6 -- Profiling',
+        {'nDSG Provision': 'Art. 6 - Profiling',
          'Requirement': 'High-risk profiling (automated assessment of creditworthiness) requires explicit consent or legal basis. Must be transparent and proportionate.',
          'CREW Alignment': 'CREW performs high-risk profiling (credit scoring). Requires explicit consent or contractual necessity as legal basis. Feature selection documented with proportionality rationale.'},
-        {'nDSG Provision': 'Art. 8 -- Data Security',
+        {'nDSG Provision': 'Art. 8 - Data Security',
          'Requirement': 'Appropriate technical and organizational measures to protect personal data',
          'CREW Alignment': 'Model artifacts stored locally. API keys in .env (not committed). .gitignore excludes sensitive files. Production deployment would require encryption at rest and in transit.'},
     ])

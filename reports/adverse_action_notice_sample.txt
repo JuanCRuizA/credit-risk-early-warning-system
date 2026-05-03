@@ -1,7 +1,7 @@
 ======================================================================
                     ADVERSE ACTION NOTICE
 ======================================================================
-Date:              2026-04-05
+Date:              2026-05-03
 Application ID:    253130
 Decision:          Credit Application Denied
 Predicted PD:      0.8824  (decision threshold: 0.79)
