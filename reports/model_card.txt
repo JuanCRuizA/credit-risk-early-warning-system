@@ -9,7 +9,7 @@
   Model Name:           XGBoost Credit Risk Model v1.0
   Model Type:           Gradient Boosted Decision Trees (XGBoost)
   Version:              1.0
-  Documentation Date:   2026-05-03
+  Documentation Date:   2026-05-05
   Model Owner:          Credit Risk Analytics Team
 
 📎 PURPOSE AND INTENDED USE

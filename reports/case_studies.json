@@ -18,9 +18,9 @@
     "explanation": "This loan was historically approved by Home Credit's existing system and the borrower subsequently defaulted. Our XGBoost model, evaluated retroactively, would have correctly rejected this application. The case was selected by maximising (predicted_probability - EXT_SOURCE_MEAN), surfacing the instance where the bureau-score signal most clearly justified a rejection. It validates that the primary risk channel is operating as designed.",
     "drivers_title": "Key Risk Drivers",
     "drivers": [
-      "Very low external bureau score (0.019), primary risk signal strongly weighted",
-      "Predicted probability well above the business threshold (p = 0.92)",
-      "Bureau overdue balance ($132K) confirmed pattern of prior missed payments"
+      " EXT_SOURCE_MEAN (0.019), top driver (+0.96)",
+      " BUREAU_AMT_CREDIT_SUM_OVERDUE_SUM (131728.500), top driver (+0.26)",
+      " BUREAU_OVERDUE_RATIO (0.060), top driver (+0.23)"
     ]
   },
   "false_positive": {
@@ -42,9 +42,9 @@
     "explanation": "This borrower showed genuine statistical risk indicators: a below-average external bureau score (0.242), a 67% prior refusal rate, and only 1.5 years of employment. The model correctly weighted these signals and flagged the application. The historical record shows the borrower repaid the loan granted by Home Credit's existing system. Our model would have blocked this performing loan. The decision was statistically justified but individually incorrect, representing the expected cost of conservative calibration. Provides the basis for an ECOA / Reg B adverse action notice (EU AI Act Art. 13 explanation).",
     "drivers_title": "Key Factors in False Alert",
     "drivers": [
-      "Low external bureau score (0.242), below population median. Primary risk driver.",
-      "Prior refusal rate 67%, reflecting a pattern of previous credit difficulties",
-      "Short employment (1.5 yr), insufficient stability relative to loan size"
+      " EXT_SOURCE_MEAN (0.242), top driver (+0.82)",
+      " PREV_REFUSAL_RATE (0.667), top driver (+0.18)",
+      " BUREAU_ACTIVE_LOAN_COUNT (7.000), top driver (+0.17)"
     ],
     "improvement": "Consider a tiered review band for applicants with high refusal rates but moderate external scores: manual underwriter review or structured product alternatives (smaller loan, shorter term) may recover some of these customers while managing portfolio risk. This reduces the cost of statistically-justified but individually-incorrect rejections."
   },
@@ -67,9 +67,9 @@
     "explanation": "The model approved this borrower because the headline features looked healthy: above-average external bureau score, no recent refusals, stable employment. Yet the customer defaulted. This is the most diagnostic FN in the test set, selected by maximising (EXT_SOURCE_MEAN - predicted_probability). The default was driven by factors not captured in the feature set (likely macroeconomic shock, income loss, or sudden behavioural change). Motivates incorporating forward-looking macro indicators and real-time payment-behaviour signals.",
     "drivers_title": "Key Factors in Missed Detection",
     "drivers": [
-      "Above-average external score suppressed the headline risk signal",
-      "Clean credit history (zero recent refusals) masked emerging stress",
-      "Loan amount within normal range, no size-based red flag"
+      " EXT_SOURCE_MEAN (0.760), top driver (-0.97)",
+      " EXT_SCORE_x_AGE (46.502), top driver (-0.23)",
+      " PREV_DAYS_DECISION_MAX (-2788.000), top driver (+0.19)"
     ],
     "improvement": "Incorporate forward-looking macroeconomic indicators (unemployment rate, GDP growth, interest-rate path) and real-time behavioural signals (payment delays, utilisation spikes) so the model can detect defaults driven by shocks rather than static borrower characteristics."
   }
