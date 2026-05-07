@@ -35,6 +35,8 @@ Document key technical decisions, rationale, and alternatives considered during 
 - [DECISION-025] Tab Reordering — SHAP Before AI Agent
 - [DECISION-026] Live SHAP Attribution in Sidebar Risk Calculator
 - [DECISION-027] Align app.py Cost Model and Formula with NB03 Profit-Maximization Framework
+- [DECISION-028] NB04 as Single Source of Truth for Case Study Data via JSON Export
+- [DECISION-029] Dynamic SHAP Driver Extraction Replacing Hard-Coded Key Factors Lists
 
 ### Pending Review
 - None
@@ -727,6 +729,57 @@ Document key technical decisions, rationale, and alternatives considered during 
 - SHAP values computed on the exact same `X_calc` used for prediction — guaranteed consistency
 - If SHAP features/model mismatch occurs (e.g., model retrained), the `except` block catches it gracefully
 **Related:** `app.py` (sidebar risk calculator section), DECISION-009, ISSUE-017
+
+---
+
+### [DECISION-028] NB04 as Single Source of Truth for Case Study Data via JSON Export
+**Date:** 2026-05-05
+**Status:** Implemented
+**Context:** app.py Tab 3 previously had a hard-coded `cases` dictionary with fictional borrower profiles that did not match the actual instances selected by NB04 for SHAP waterfall generation. The SHAP PNGs and dashboard narrative text described completely different borrowers.
+**Decision:** NB04 cell 32 (`case_studies_export`) exports `reports/case_studies.json` containing feature values, narrative text, drivers, and improvement text for all three cases. app.py loads this JSON at startup via a path check and graceful fallback.
+**Rationale:**
+- Eliminates drift between SHAP waterfall PNGs and dashboard text — both now originate from the same notebook execution
+- Drama-score selection (NB04) determines which instances are shown; JSON captures their exact feature values at selection time
+- app.py requires no changes when cases change — only the JSON format must be stable
+- Single regeneration step: re-run NB04 cells 3.1 → 3.6, commit and push
+**Alternatives Considered:**
+- Hard-coded dict in app.py with manual updates: Error-prone; narrative text and feature values diverged in practice
+- Pass SHAP values directly to app.py: Requires model and data on Streamlit Cloud; too heavy
+**Consequences:**
+- `reports/case_studies.json` must be committed to git for Streamlit Cloud to access it (ISSUE-020)
+- JSON schema: `{case_label: {index, score, actual, decision, waterfall_file, lime_file, features, explanation, drivers_title, drivers, improvement}}`
+- app.py shows a warning banner and calls `st.stop()` if JSON is absent
+**Related:** `notebooks/04_model_explainability.ipynb` (cell 32), `reports/case_studies.json`, `app.py` (Tab 3), ISSUE-020
+
+---
+
+### [DECISION-029] Dynamic SHAP Driver Extraction Replacing Hard-Coded Key Factors Lists
+**Date:** 2026-05-05
+**Status:** Implemented
+**Context:** `_DRIVERS_TP`, `_DRIVERS_FP`, `_DRIVERS_FN` in NB04 cell 32 were hand-written strings based on expected borrower profiles. After drama-score case selection, the actual selected instances had different top SHAP features than described, causing inconsistency between the Key Factors panel and the SHAP waterfall chart (e.g., Key Factors listed "Short employment" as the 3rd driver for FP, but the waterfall showed `BUREAU_ACTIVE_LOAN_COUNT` at +0.17 in 3rd position).
+**Decision:** Replace all three hard-coded lists with calls to `get_top_drivers(idx)` — a self-contained helper function that extracts the top 3 features by absolute SHAP magnitude for any given instance index.
+**Implementation:**
+```python
+def get_top_drivers(idx):
+    shap_series = pd.Series(shap_values[X_sample.index.get_loc(idx)], index=X_sample.columns)
+    drivers = []
+    for feature, shap_val in shap_series[shap_series.abs().sort_values(ascending=False).head(3).index].items():
+        drivers.append(f" {feature} ({X_sample.loc[idx, feature]:.3f}), top driver ({shap_val:+.2f})")
+    return drivers
+```
+**Rationale:**
+- Key Factors always matches the waterfall by construction — both read from `shap_values`
+- Function is fully self-contained: no global variable dependencies beyond `shap_values` and `X_sample`
+- Absolute value sorting ensures blue-bar (protective) features are captured correctly for FN cases
+- Eliminates manual maintenance when case selection or drama scores change
+**Alternatives Considered:**
+- Fix hard-coded lists to match current instances: Requires manual update every time drama-score selection changes
+- Show top N from a pre-computed global importance: Global importance ≠ local instance importance
+**Consequences:**
+- Feature names in Key Factors are raw column names (`EXT_SOURCE_MEAN`, not "External Bureau Score") — a human-readable name-mapping dictionary is a future enhancement
+- Function must be defined in a cell that executes before cell 32 (`case_studies_export`)
+- `get_top_drivers` must be called after `shap_values`, `X_sample`, `fp_idx`, `fn_idx`, `tp_idx` are all defined
+**Related:** `notebooks/04_model_explainability.ipynb` (cell 32), `reports/case_studies.json`, DECISION-028
 
 ---
 

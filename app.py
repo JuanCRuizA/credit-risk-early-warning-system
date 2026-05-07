@@ -826,7 +826,7 @@ with tab3:
     # Case Studies
     st.subheader("Case Study Explorer")
     st.caption(
-        "Representative loan decisions covering all confusion matrix quadrants. "
+        "Representative loan decisions covering three out of four confusion matrix quadrants. "
         "Each case shows the SHAP waterfall and a plain-English explanation."
     )
 

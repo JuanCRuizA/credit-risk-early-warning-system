@@ -337,6 +337,14 @@
 - **LIME validates SHAP**: Dual-method explainability confirms top feature attributions are robust across methodologies
 
 ### Changes Log
+- **2026-05-05**: Replaced hard-coded case selection and narrative text with dynamic SHAP-driven approach (DECISION-028, DECISION-029):
+  - Replaced `idxmax/idxmin` case selection with deterministic drama-score functions (FN drama = EXT_SOURCE_MEAN − prob_default; FP drama = EXT_SOURCE_MEAN − (prob − threshold); TP clarity = prob − EXT_SOURCE_MEAN)
+  - Added markdown cell `case_selection_rationale` with SR 11-7 rationale table for drama scores
+  - Added code cell `case_studies_export` that exports `reports/case_studies.json` as the single source of truth for app.py Tab 3
+  - Added `get_top_drivers(idx)` helper function: extracts top 3 SHAP features by absolute magnitude for any instance — replaces all three hard-coded `_DRIVERS_*` lists
+  - Fixed TP/FP narrative framing: clarified that all test-set loans were historically approved by Home Credit's existing system; XGBoost evaluated retroactively
+  - Removed all em-dashes and `--` used as em-dashes from narrative strings in cell 32
+  - Deleted practice/scratch cells used during development before commit
 - **2026-04-04**: Applied isotonic calibrator throughout NB04 (DECISION-023):
   - Cell 3: Added `calibrator = joblib.load('calibrator.pkl')` alongside existing artifact loads
   - Cell 7: Applied `calibrator.predict()` to raw probabilities; defined `calibrated_predict_fn` wrapper for LIME
@@ -483,6 +491,12 @@
 - **2026-04-11 Sprint B**: Dynamic Tab 4 (AI Agent) from agent_output_latest.json; LIME Validation section in Tab 3 (SHAP); live SHAP attribution in sidebar (DECISION-026); audit log + model card download buttons in Tab 5; adverse action notice expander; Tab order swapped (SHAP → Tab 3, AI Agent → Tab 4 — DECISION-025)
 - **2026-04-11 Sprint C**: "About & Methods" renamed to "Technical Architecture" with full pipeline description
 - **2026-04-11 Bug fixes**: pandas `applymap` → `.map()` (ISSUE-015); `encoding='utf-8'` on all text file reads (ISSUE-016); interaction features computed in risk calculator (ISSUE-017)
+- **2026-05-05**: Replaced hard-coded `cases` dict in Tab 3 with JSON loader (DECISION-028):
+  - `case_studies_path = REPORTS_PATH / 'case_studies.json'` loaded at startup
+  - Graceful fallback warning if JSON absent; `st.stop()` if `cases` dict is empty
+  - Case selector dropdown labels updated from `--` to `-` (em-dash cleanup)
+  - SHAP waterfall subheader changed from `--` to `.`; caption split updated to match
+  - All em-dashes (`—`) and `--` used as em-dashes replaced throughout app.py with periods, commas, or hyphens (IFRS9 tables, EU AI Act table, FINMA section, nDSG section, framework bullets, feature attribution list)
 - **2026-04-26 Cost model alignment (DECISION-027, ISSUE-019)**: Aligned all cost parameters and net profit formula with NB03 §6.1-6.2: (1) `AVG_LOAN`: `.mean()` → `.median()`; (2) `LGD`: 0.45 → 0.60; (3) `FP_COST`: $50 flat → `AVG_LOAN * 0.10` (~$51,206, foregone loan profit); (4) formula: `net_savings = no_model_cost - fn*FN - fp*FP` → `net_profit = tn*FP - fn*FN - fp*FP` (includes TN revenue). KPI tile renamed "Expected Net Profit"; delta shows +$141M vs no-model. Downstream labels updated: "False Alarm Cost" → "Foregone Loan Profit"; Cost-Benefit table "Total Cost" → "Expected Net Profit". Validation: FN/FP ratio = 6.0x; 0.79 ($1.511B) now correctly dominates 0.51 ($970M)
 
 ---
