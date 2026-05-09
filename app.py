@@ -965,8 +965,8 @@ with tab4:
         "**Agent Architecture**. The NB05 Prudent Risk Officer (Claude Sonnet 4) executes "
         "a 4-phase hierarchical protocol using 5 custom tools: "
         "(A) Data Integrity Validation · (B) Risk Flagging · "
-        "(C) SHAP Deep-Dive & Stress Tests · (D) Watch List & Recommendations. "
-        "Full reasoning trace available in `audit_trail.log`."
+        "(C) SHAP Deep-Dive & Stress Tests · (D) Watch List & Recommendations · "
+        "(E) Regulatory Audit Logger. Full reasoning trace available in `audit_trail.log`."
     )
 
     st.markdown("---")
