@@ -1048,7 +1048,7 @@ with tab4:
     st.markdown("---")
 
     # Agent reasoning trace, S5
-    with st.expander("Agent Reasoning Trace, Phase A–D Tool Call Sequence (April 8, 2026 run)"):
+    with st.expander("Agent Reasoning Trace, Phase A–E Tool Call Sequence (April 8, 2026 run)"):
         st.caption(
             "Excerpt from `audit_trail.log` showing the agent's multi-turn tool invocations. "
             "Each line is a real decision logged by the Prudent Risk Officer agent during execution."
@@ -1083,6 +1083,12 @@ with tab4:
             "  [verification] Basel IV: PASS  RWA=$8.16B  Required capital=$652.8M\n"
             "  [verification] SR 11-7 documentation generated\n"
             "  [verification] All checks: 4/4 PASS\n"
+            "\n"
+            "PHASE E. INDEPENDENT VERIFICATION (VerificationSubagent)\n"
+            "  [verification]  EL math validation: PD x LGD x EAD per borrower   → PASS\n"
+            "  [verification]  VaR consistency: 95%/99% parametric check          → PASS\n"
+            "  [verification]  Capital adequacy bounds: Basel IV IRB               → PASS\n"
+            "  [verification]  Watch list ranking integrity: descending by EL      → PASS\n"
             "\n"
             "SESSION_END  status=Completed  result_length=1,411 chars",
             language=None,

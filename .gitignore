@@ -118,3 +118,14 @@ reports/*.pdf
 !models/population_medians.csv  
 !models/xgb_credit_model.pkl
 !models/calibrator.pkl 
+
+# Local docs — not for GitHub
+demo/
+docs/IMPROVEMENT_PLAN.md
+docs/ImprovementNB03plan.md
+docs/NB01_EDA_Reference.docx
+docs/NB02_FeatureEng_Reference.docx
+docs/gemini_review.md
+docs/nb03_study_guide.md
+docs/nb04_study_guide.docx
+docs/nb05_study_guide.docx
