@@ -940,7 +940,7 @@ with tab3:
 with tab4:
     st.header("AI Agent Portfolio Surveillance")
     st.caption(
-        "Autonomous AI agent (Claude Sonnet 4) performs a 4-phase hierarchical analysis "
+        "Autonomous AI agent (Claude Sonnet 4) performs a 5-phase hierarchical analysis "
         "of the credit portfolio with regulatory compliance checks."
     )
 
@@ -979,6 +979,7 @@ with tab4:
         pb = agent_output.get('phase_b', {})
         pc = agent_output.get('phase_c', {})
         pd_phase = agent_output.get('phase_d', {})
+        pe_phase = agent_output.get('phase_e',{})
 
         col_l, col_r = st.columns(2)
         with col_l:
@@ -988,13 +989,16 @@ with tab4:
             st.markdown("### Phase B: Risk Identification")
             for f in pb.get('findings', []):
                 st.markdown(f"- {f}")
-        with col_r:
             st.markdown("### Phase C: SHAP Deep-Dive & Stress Tests")
             for f in pc.get('findings', []):
-                st.markdown(f"- {f}")
+                st.markdown(f"- {f}")               
+        with col_r:
             st.markdown("### Phase D: Recommendations")
             for i, rec in enumerate(pd_phase.get('recommendations', []), 1):
                 st.markdown(f"{i}. **{rec}**")
+            st.markdown("### Phase E: Verification")
+            for f in pe_phase.get('findings', []):
+                st.markdown(f"- {f}")
 
         # Key metrics row
         st.markdown("---")
