@@ -275,6 +275,32 @@ Validation: FN/FP ratio = 6.0x; Expected Net Profit at 0.79 = $1.511B; at 0.51 =
 
 ---
 
+### [ISSUE-021] Tab 4 Phase E Absent from Dashboard Despite 5-Phase Protocol
+**Date:** 2026-05-09
+**Status:** Resolved
+**Severity:** Low
+**Problem:** Tab 4 (AI Agent Insights) showed only 4 phases in Key Findings, the Agent Architecture banner named 5 tools without listing (E), the reasoning trace title read "Phase A-D Tool Call Sequence", and no Phase E block appeared in the trace — inconsistent with NB05's documented 5-phase protocol.
+**Root Cause:** Tab 4 was built during Sprint A/B/C (April 11) when Phase E was already implemented in NB05 but the dashboard was not updated to reflect it. `reports/agent_output_latest.json` had no `phase_e` key, so there was no structured data source for Phase E display.
+**Solution:** Four coordinated fixes across app.py and the JSON:
+1. Added "(E) Regulatory Audit Logger" to Agent Architecture banner; updated caption from "4-phase" to "5-phase"
+2. Moved Phase C to left column (with A and B); added Phase E section to right column (with D), rendered via `pe_phase.get('findings', [])` loop consistent with all other phases
+3. Added `phase_e` key to `reports/agent_output_latest.json` with 4 findings (EL math, VaR, capital adequacy, watch list ranking — all PASS) — see DECISION-030
+4. Updated reasoning trace expander title from "Phase A-D" to "Phase A-E" and added Phase E verification block
+**Prevention:** When adding phases to the agent protocol, update the dashboard rendering simultaneously. Keep agent_output_latest.json schema consistent with the phase naming used throughout the UI.
+
+---
+
+### [ISSUE-022] Tab 3 Caption Incorrectly Claimed Coverage of All Four Confusion Matrix Quadrants
+**Date:** 2026-05-09
+**Status:** Resolved
+**Severity:** Low
+**Problem:** Tab 3 Case Study Explorer caption read "Representative loan decisions covering all confusion matrix quadrants" but the explorer only covers TP, FP, and FN. TN (correctly approved good customer) is intentionally absent as it is not informative for risk explainability demos.
+**Root Cause:** Caption written without accounting for the deliberate exclusion of TN cases.
+**Solution:** Changed "all" to "three out of four" in app.py line 829.
+**Prevention:** When writing UI captions that describe coverage, verify the claim against the actual content displayed. TN exclusion is a design choice worth making explicit.
+
+---
+
 ### [ISSUE-012] EMPLOYMENT_YEARS Inconsistency Between NB01 and NB02
 **Date:** 2026-03-29
 **Status:** Resolved

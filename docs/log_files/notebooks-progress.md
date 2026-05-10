@@ -471,7 +471,7 @@
 | 1 — Portfolio Overview | Hero paragraph; Executive Brief expander (loads `executive_summary.txt`); 4 KPI cards (Total Loans, High Risk, Default Rate, Model Status); Risk Band table from `model_card.json`; Risk distribution bar chart; Vintage analysis line chart |
 | 2 — Model Performance | 4-metric row (AUC/Gini/KS/Brier from `model_card.json`); Decile/lift table; `calibration_before_after.png`; ROC curve with live vs. calibrated AUC legend note |
 | 3 — SHAP Explainability | Global SHAP beeswarm + importance bar chart; 3 waterfall case studies (FN, FP, TP); LIME Validation section (3 LIME plots + `shap_vs_lime_comparison.png`) |
-| 4 — AI Agent Insights | Fully dynamic from `reports/agent_output_latest.json`; Phase A–D KPIs and findings; PSI table with color coding; Agent reasoning trace expander; Basel IV compliance status badge; graceful fallback if JSON absent |
+| 4 — AI Agent Insights | Fully dynamic from `reports/agent_output_latest.json`; Phase A–E KPIs and findings; PSI table with color coding; Agent reasoning trace expander (Phase A-E); Basel IV compliance status badge; graceful fallback if JSON absent |
 | 5 — Regulatory Compliance | 8-framework compliance table; audit log download button; model card JSON download button; adverse action notice sample in expander |
 
 ### Sidebar Features
@@ -497,6 +497,13 @@
   - Case selector dropdown labels updated from `--` to `-` (em-dash cleanup)
   - SHAP waterfall subheader changed from `--` to `.`; caption split updated to match
   - All em-dashes (`—`) and `--` used as em-dashes replaced throughout app.py with periods, commas, or hyphens (IFRS9 tables, EU AI Act table, FINMA section, nDSG section, framework bullets, feature attribution list)
+- **2026-05-09**: Phase E dashboard integration and consistency fixes (ISSUE-021, ISSUE-022, DECISION-030):
+  - Agent Architecture banner: added "(E) Regulatory Audit Logger" as 5th tool; updated caption from "4-phase" to "5-phase"
+  - Key Findings layout: moved Phase C to left column (with A, B); added Phase E section to right column (with D) — all 5 phases now displayed with consistent `findings` loop rendering
+  - `reports/agent_output_latest.json`: added `phase_e` key with structured findings list (EL math, VaR, capital adequacy, watch list ranking: all PASS)
+  - Agent Reasoning Trace: updated expander title from "Phase A-D" to "Phase A-E"; added Phase E verification block with 4 entries
+  - Tab 3 caption: corrected "all confusion matrix quadrants" to "three out of four" (TN intentionally absent)
+  - `.gitignore`: added `demo/`, `docs/IMPROVEMENT_PLAN.md`, `docs/ImprovementNB03plan.md`, and 6 other local docs/study guides to prevent accidental commits
 - **2026-04-26 Cost model alignment (DECISION-027, ISSUE-019)**: Aligned all cost parameters and net profit formula with NB03 §6.1-6.2: (1) `AVG_LOAN`: `.mean()` → `.median()`; (2) `LGD`: 0.45 → 0.60; (3) `FP_COST`: $50 flat → `AVG_LOAN * 0.10` (~$51,206, foregone loan profit); (4) formula: `net_savings = no_model_cost - fn*FN - fp*FP` → `net_profit = tn*FP - fn*FN - fp*FP` (includes TN revenue). KPI tile renamed "Expected Net Profit"; delta shows +$141M vs no-model. Downstream labels updated: "False Alarm Cost" → "Foregone Loan Profit"; Cost-Benefit table "Total Cost" → "Expected Net Profit". Validation: FN/FP ratio = 6.0x; 0.79 ($1.511B) now correctly dominates 0.51 ($970M)
 
 ---

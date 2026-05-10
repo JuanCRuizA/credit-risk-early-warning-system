@@ -95,13 +95,13 @@
         "Feature": "DAYS_BIRTH",
         "PSI": 0.15,
         "Status": "Moderate Shift",
-        "Action": "Monitor — age distribution changing"
+        "Action": "Monitor, age distribution changing"
       },
       {
         "Feature": "AMT_CREDIT",
         "PSI": 0.12,
         "Status": "Moderate Shift",
-        "Action": "Monitor — loan amounts trending higher"
+        "Action": "Monitor,  loan amounts trending higher"
       },
       {
         "Feature": "EXT_SOURCE_MEAN",
