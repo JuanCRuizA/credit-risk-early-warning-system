@@ -21,6 +21,26 @@ Four notebooks completed or in progress:
 
 **Roadmap (pending):** NB05, Streamlit dashboard, AI agent notebook as capstone.
 
+## Feature Engineering — Banking Ratio Logic (NB02)
+
+Correlated raw features (AMT_CREDIT, AMT_ANNUITY, AMT_GOODS_PRICE) are intentionally preserved
+and used to engineer six banking-standard ratios. Do not suggest removing them for multicollinearity.
+
+| Short name | Feature | Formula | Banking meaning |
+|---|---|---|---|
+| DTI | DEBT_TO_INCOME | AMT_CREDIT / AMT_INCOME_TOTAL | Debt burden relative to income |
+| Liquidity | PAYMENT_BURDEN | AMT_ANNUITY / AMT_INCOME_TOTAL | Monthly payment as % of income |
+| LTV | CREDIT_TO_GOODS | AMT_CREDIT / AMT_GOODS_PRICE | Loan-to-value ratio |
+| Velocity | ANNUITY_TO_CREDIT | AMT_ANNUITY / AMT_CREDIT | Repayment speed / loan tenor proxy |
+| IPP | INCOME_PER_PERSON | AMT_INCOME_TOTAL / CNT_FAM_MEMBERS | Effective income per household member |
+| Capacity | INCOME_TO_CREDIT | AMT_INCOME_TOTAL / AMT_CREDIT | Repayment capacity |
+
+Interview answer for multicollinearity question:
+"Rather than dropping correlated features, I used those relationships to engineer
+banking-standard ratios that are interpretable, regulatory-aligned, and used by
+underwriters in practice (DTI, LTV, payment burden). CREDIT_TO_GOODS and
+ANNUITY_TO_CREDIT both appear in the model's top features."
+
 ## Working Principles
 - Ask before modifying existing cells; new sections can be added directly
 - Do not restructure existing code without confirmation
